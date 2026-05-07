@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="720.0" prefWidth="1200.0" style="-fx-background-color: #003c3a;" xmlns="http://javafx.com/javafx/26"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.controller.SellerHomeController"
+            stylesheets="@../style/seller.css">
+
+    <top>
+        <VBox spacing="18.0" style="-fx-background-color: #003c3a;" BorderPane.alignment="CENTER_LEFT">
+            <padding>
+                <Insets bottom="20.0" left="36.0" right="36.0" top="30.0" />
+            </padding>
+
+            <children>
+                <Label style="-fx-text-fill: #d4af37; -fx-font-style: italic; -fx-font-weight: bold;" text="Seller Dashboard">
+                    <font>
+                        <Font size="28.0" />
+                    </font>
+                </Label>
+
+                <Label fx:id="welcomeLabel" text="Welcome Seller" />
+
+                <HBox spacing="18.0">
+                    <children>
+                        <Button onAction="#handleAddProduct" prefWidth="145.0" style="-fx-font-weight: bold;" text="Add Product" />
+
+                        <Button onAction="#handleEditProduct" prefWidth="145.0" style="-fx-font-weight: bold;" text="Edit Product" />
+
+                        <Button onAction="#handleDeleteProduct" prefWidth="145.0" style="-fx-font-weight: bold;" text="Delete Product" />
+
+                        <Button onAction="#handleCloseAuction" prefWidth="145.0" style="-fx-font-weight: bold;" text="Close Auction" />
+
+                        <Button onAction="#handleRefresh" prefWidth="145.0" style="-fx-font-weight: bold;" text="Refresh" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="productTable" BorderPane.alignment="CENTER">
+            <BorderPane.margin>
+                <Insets bottom="20.0" left="36.0" right="36.0" />
+            </BorderPane.margin>
+
+            <columns>
+                <TableColumn fx:id="idColumn" prefWidth="70.0" style="-fx-text-fill: green;" text="ID" />
+
+                <TableColumn fx:id="nameColumn" prefWidth="280.0" text="Name" />
+
+                <TableColumn fx:id="startPriceColumn" prefWidth="190.0" text="Start Price" />
+
+                <TableColumn fx:id="currentPriceColumn" prefWidth="190.0" text="Current Price" />
+
+                <TableColumn fx:id="statusColumn" prefWidth="160.0" text="Status" />
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" BorderPane.alignment="CENTER_RIGHT">
+            <padding>
+                <Insets bottom="30.0" left="36.0" right="36.0" top="0.0" />
+            </padding>
+
+            <children>
+                <Button prefWidth="150.0" style="-fx-background-color: #b71c1c; -fx-font-weight: bold;" text="Logout" onAction="#handleLogout" />
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>
