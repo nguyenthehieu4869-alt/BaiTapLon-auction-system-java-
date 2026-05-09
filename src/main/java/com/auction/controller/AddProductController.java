@@ -2,7 +2,7 @@ package com.auction.controller;
 
 import com.auction.service.ProductDAO;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
+import com.auction.util.AlertUtil;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -27,7 +27,7 @@ public class AddProductController {
         String priceText = startPriceField.getText().trim();
 
         if (name.isEmpty() || description.isEmpty() || priceText.isEmpty()) {
-            showError("Vui lòng nhập đầy đủ thông tin");
+            AlertUtil.showError("Vui lòng nhập đầy đủ thông tin");
             return;
         }
 
@@ -36,22 +36,22 @@ public class AddProductController {
         try {
             startPrice = Double.parseDouble(priceText);
         } catch (NumberFormatException e) {
-            showError("Giá khởi điểm phải là số");
+            AlertUtil.showError("Giá khởi điểm phải là số");
             return;
         }
 
         if (startPrice <= 0) {
-            showError("Giá khởi điểm phải lớn hơn 0");
+            AlertUtil.showError("Giá khởi điểm phải lớn hơn 0");
             return;
         }
 
         boolean success = productDAO.addProduct(name, description, startPrice);
 
         if (success) {
-            showInfo("Thêm sản phẩm thành công");
+            AlertUtil.showInfo("Thêm sản phẩm thành công");
             closeWindow();
         } else {
-            showError("Thêm sản phẩm thất bại");
+            AlertUtil.showError("Thêm sản phẩm thất bại");
         }
     }
 
@@ -65,17 +65,4 @@ public class AddProductController {
         stage.close();
     }
 
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 }

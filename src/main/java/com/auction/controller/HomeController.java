@@ -1,10 +1,11 @@
 package com.auction.controller;
 
+import com.auction.util.AlertUtil;
+import com.auction.util.PriceFormatter;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import com.auction.model.Product;
@@ -13,8 +14,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.TableCell;
-import java.text.NumberFormat;
-import java.util.Locale;
+
 import java.io.IOException;
 
 public class HomeController {
@@ -70,7 +70,7 @@ public class HomeController {
                 if (empty || price == null) {
                     setText(null);
                 } else {
-                    setText(formatPrice(price));
+                    setText(PriceFormatter.formatVND(price));
                 }
             }
         });
@@ -84,7 +84,7 @@ public class HomeController {
                 if (empty || price == null) {
                     setText(null);
                 } else {
-                    setText(formatPrice(price));
+                    setText(PriceFormatter.formatVND(price));
                 }
             }
         });
@@ -110,7 +110,7 @@ public class HomeController {
         Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
 
         if (selectedProduct == null) {
-            showError("Vui lòng chọn sản phẩm trước");
+            AlertUtil.showError("Vui lòng chọn sản phẩm trước");
             return;
         }
 
@@ -121,27 +121,20 @@ public class HomeController {
             ProductDetailController controller = loader.getController();
             controller.setProduct(selectedProduct);
 
+
             Stage stage = (Stage) productTable.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
 
         } catch (IOException e) {
             e.printStackTrace();
-            showError("Không thể mở trang chi tiết sản phẩm");
+            AlertUtil.showError("Không thể mở trang chi tiết sản phẩm");
         }
     }
 
-    private String formatPrice(double price) {
-        NumberFormat formatter = NumberFormat.getInstance(Locale.US);
-        return formatter.format(price) + " VND";
-    }
 
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
+
+
 }
 
 

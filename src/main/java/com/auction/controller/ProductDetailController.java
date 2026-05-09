@@ -1,15 +1,14 @@
 package com.auction.controller;
 
+import com.auction.service.BidResult;
+import com.auction.service.BidService;
 import com.auction.model.Product;
 import com.auction.service.ProductDAO;
 import javafx.fxml.*;
 import javafx.scene.*;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import java.text.NumberFormat;
-import java.util.Locale;
 import com.auction.model.Bid;
 import com.auction.service.BidDAO;
 import javafx.scene.control.TableColumn;
@@ -17,6 +16,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.Button;
+import com.auction.util.AlertUtil;
+import com.auction.util.PriceFormatter;
 
 public class ProductDetailController {
 
@@ -39,10 +40,10 @@ public class ProductDetailController {
     private TableView<Bid> bidHistoryTable;
 
     @FXML
-    private TableColumn<Bid, String> bidderNameColumn;
+    private TableColumn<Bid, String> bidderUsernameColumn;
 
     @FXML
-    private TableColumn<Bid, Double> bidAmountColumn;
+    private TableColumn<Bid, Double> bidPriceColumn;
 
     @FXML
     private TableColumn<Bid, java.sql.Timestamp> bidTimeColumn;
@@ -52,60 +53,37 @@ public class ProductDetailController {
 
     private Product product;
 
+    private final BidService bidService = new BidService();
+
+    private final BidDAO bidDAO = new BidDAO();
+
+    private String username;
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     @FXML
     private void handlePlaceBid() {
         try {
-            String bidText = bidAmountField.getText();
+            double newPrice = Double.parseDouble(bidAmountField.getText());
 
-            if (bidText == null || bidText.trim().isEmpty()) {
-                showAlert("Vui lòng nhập mức giá thầu");
+            BidResult result = bidService.placeBid(product, username, newPrice);
+
+            if (!result.isSuccess()) {
+                AlertUtil.showError(result.getMessage());
                 return;
             }
 
-            if ("CLOSED".equalsIgnoreCase(product.getStatus())){
-                showAlert("Sản phẩm đã đóng đấu giá !");
-                return;
-            }
+            product.setCurrentPrice(newPrice);
+            currentPriceLabel.setText(PriceFormatter.formatVND(newPrice));
 
-            double newPrice = Double.parseDouble(bidText);
+            loadBidHistory();
 
-            if (newPrice <= product.getCurrentPrice()) {
-                showAlert("Giá thầu phải lớn hơn giá hiện tại");
-                return;
-            }
-
-            ProductDAO productDAO = new ProductDAO();
-
-            boolean success = productDAO.updateCurrentPrice(product.getId(), newPrice);
-
-            if (success) {
-                BidDAO bidDAO = new BidDAO();
-                boolean bidSaved = bidDAO.addBid(product.getId(), "Guest", newPrice);
-
-                if (bidSaved) {
-                    showAlert("Đặt giá thành công");
-                } else {
-                    showAlert("Đặt giá thành công nhưng chưa lưu được lịch sử");
-                }
-
-
-                currentPriceLabel.setText(formatPrice(newPrice));
-
-                product = new Product(
-                        product.getId(),
-                        product.getName(),
-                        product.getDescription(),
-                        product.getStartPrice(),
-                        newPrice,
-                        product.getStatus()
-                );
-
-            } else {
-                showAlert("Đặt giá thất bại");
-            }
+            AlertUtil.showInfo(result.getMessage());
 
         } catch (NumberFormatException e) {
-            showAlert("Giá thầu phải là số");
+            AlertUtil.showError("Vui lòng nhập giá hợp lệ");
         }
     }
 
@@ -123,35 +101,23 @@ public class ProductDetailController {
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Không thể quay lại trang chủ");
+            AlertUtil.showError("Không thể quay lại trang chủ");
         }
     }
 
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Thông báo");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private String formatPrice(double price) {
-        NumberFormat formatter = NumberFormat.getInstance(Locale.US);
-        return formatter.format(price) + " VND";
-    }
 
     public void setProduct(Product product) {
         this.product = product;
 
         productNameLabel.setText("Name: " + product.getName());
         descriptionLabel.setText("Description: " + product.getDescription());
-        currentPriceLabel.setText(formatPrice(product.getCurrentPrice()));
+        currentPriceLabel.setText(PriceFormatter.formatVND(product.getCurrentPrice()));
         statusLabel.setText("Status: " + product.getStatus());
 
-        bidderNameColumn.setCellValueFactory(new PropertyValueFactory<>("bidderName"));
-        bidAmountColumn.setCellValueFactory(new PropertyValueFactory<>("bidAmount"));
+        bidderUsernameColumn.setCellValueFactory(new PropertyValueFactory<>("bidderUsername"));
+        bidPriceColumn.setCellValueFactory(new PropertyValueFactory<>("bidPrice"));
 
-        bidAmountColumn.setCellFactory(column -> new TableCell<Bid, Double>() {
+        bidPriceColumn.setCellFactory(column -> new TableCell<Bid, Double>() {
             @Override
             protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
@@ -159,7 +125,7 @@ public class ProductDetailController {
                 if (empty || price == null) {
                     setText(null);
                 } else {
-                    setText(formatPrice(price));
+                    setText(PriceFormatter.formatVND(price));
                 }
             }
         });
@@ -175,7 +141,9 @@ public class ProductDetailController {
     }
 
     private void loadBidHistory(){
-        BidDAO bidDAO = new BidDAO();
+        if (product == null) {
+            return;
+        }
         bidHistoryTable.setItems(bidDAO.getBidsByProductId(product.getId()));
     }
 }

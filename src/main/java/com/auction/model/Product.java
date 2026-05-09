@@ -40,4 +40,8 @@ public class Product {
     public String getStatus() {
         return status;
     }
+
+    public void setCurrentPrice(double currentPrice) {
+        this.currentPrice = currentPrice;
+    }
 }

@@ -6,10 +6,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import com.auction.util.AlertUtil;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+
+import static com.auction.util.AlertUtil.showError;
 
 public class RoleSelectionController {
     private String username;
@@ -34,7 +36,7 @@ public class RoleSelectionController {
 
     @FXML
     private void handleAdmin(ActionEvent event) {
-        showInfo("Đang phát triển...");
+        AlertUtil.showInfo("Đang phát triển...");
     }
 
     private void switchScene(ActionEvent event, String fxmlPath) {
@@ -61,25 +63,13 @@ public class RoleSelectionController {
 
         } catch (IOException e) {
             e.printStackTrace();
-            showError("Không thể mở màn hình: " + fxmlPath);
+            AlertUtil.showError("Không thể mở màn hình: " + fxmlPath);
         }
     }
 
 
 
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
 
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
 }
 
 

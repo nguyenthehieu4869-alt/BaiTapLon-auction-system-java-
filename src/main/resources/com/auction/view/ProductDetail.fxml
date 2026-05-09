@@ -45,8 +45,8 @@
 
             <TableView fx:id="bidHistoryTable" prefHeight="220.0" prefWidth="460.0">
                <columns>
-                  <TableColumn fx:id="bidderNameColumn" prefWidth="130.0" text="Bidder" />
-                  <TableColumn fx:id="bidAmountColumn" prefWidth="148.0" text="Amount" />
+                  <TableColumn fx:id="bidderUsernameColumn" prefWidth="130.0" text="Bidder" />
+                  <TableColumn fx:id="bidPriceColumn" prefWidth="148.0" text="Bid price" />
                   <TableColumn fx:id="bidTimeColumn" prefWidth="182.0" text="Time" />
                </columns>
             </TableView>

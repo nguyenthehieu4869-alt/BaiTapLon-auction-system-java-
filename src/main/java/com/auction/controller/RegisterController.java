@@ -7,6 +7,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import com.auction.util.AlertUtil;
 
 public class RegisterController {
 
@@ -26,27 +27,27 @@ public class RegisterController {
         String password = passwordField.getText();
 
         if (username.isEmpty()) {
-            showError("Vui lòng nhập username");
+            AlertUtil.showError("Vui lòng nhập username");
             return;
         }
 
         if (email.isEmpty()) {
-            showError("Vui lòng nhập email");
+            AlertUtil.showError("Vui lòng nhập email");
             return;
         }
 
         if (!email.contains("@")) {
-            showError("Email không hợp lệ");
+            AlertUtil.showError("Email không hợp lệ");
             return;
         }
 
         if (password.isEmpty()) {
-            showError("Vui lòng nhập password");
+            AlertUtil.showError("Vui lòng nhập password");
             return;
         }
 
         if (password.length() < 6) {
-            showError("Mật khẩu phải có ít nhất 6 ký tự");
+            AlertUtil.showError("Mật khẩu phải có ít nhất 6 ký tự");
             return;
         }
 
@@ -62,7 +63,7 @@ public class RegisterController {
 
             switchToLogin();
         } else {
-            showError("Username hoặc email đã tồn tại!");
+            AlertUtil.showError("Username hoặc email đã tồn tại!");
         }
     }
 
@@ -85,10 +86,5 @@ public class RegisterController {
         }
     }
 
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
+
 }

@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import com.auction.util.AlertUtil;
 
 public class SellerHomeController {
 
@@ -133,7 +134,7 @@ public class SellerHomeController {
 
         } catch (IOException e) {
             e.printStackTrace();
-            showError("Không thể mở form thêm sản phẩm");
+            AlertUtil.showError("Không thể mở form thêm sản phẩm");
         }
     }
 
@@ -142,7 +143,7 @@ public class SellerHomeController {
         Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
 
         if (selectedProduct == null){
-            showError("Vui lòng chọn sản phẩm cần xoá!");
+            AlertUtil.showError("Vui lòng chọn sản phẩm cần xoá!");
             return;
         }
 
@@ -157,10 +158,10 @@ public class SellerHomeController {
             boolean success = productDAO.deleteProduct(selectedProduct.getId());
 
             if (success){
-                showInfo("Xoá sản phẩm thành công !");
+                AlertUtil.showInfo("Xoá sản phẩm thành công !");
                 loadProducts();
             }else {
-                showInfo("Xoá sản phẩm thất bại !");
+                AlertUtil.showInfo("Xoá sản phẩm thất bại !");
             }
         }
     }
@@ -170,7 +171,7 @@ public class SellerHomeController {
         Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
 
         if (selectedProduct == null){
-            showError("Vui lòng chọn sản phẩm cần sửa !");
+            AlertUtil.showError("Vui lòng chọn sản phẩm cần sửa !");
             return;
         }
 
@@ -193,7 +194,7 @@ public class SellerHomeController {
 
         }catch (IOException e){
             e.printStackTrace();
-            showError("Không thể mở trang edit sản phẩm !");
+            AlertUtil.showError("Không thể mở trang edit sản phẩm !");
         }
     }
 
@@ -202,12 +203,12 @@ public class SellerHomeController {
         Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
 
         if (selectedProduct == null) {
-            showError("Vui lòng chọn sản phẩm cần đóng đấu giá");
+            AlertUtil.showError("Vui lòng chọn sản phẩm cần đóng đấu giá");
             return;
         }
 
         if ("CLOSED".equalsIgnoreCase(selectedProduct.getStatus())) {
-            showError("Sản phẩm đã được đóng đấu giá !");
+            AlertUtil.showInfo("Sản phẩm đã được đóng đấu giá !");
             return;
         }
 
@@ -222,10 +223,10 @@ public class SellerHomeController {
             boolean success = productDAO.closeAuction(selectedProduct.getId());
 
             if (success) {
-                showInfo("Đóng đấu giá thành công");
+                AlertUtil.showInfo("Đóng đấu giá thành công");
                 loadProducts();
             } else {
-                showError("Đóng đấu giá thất bại");
+                AlertUtil.showError("Đóng đấu giá thất bại");
             }
         }
     }
@@ -242,22 +243,10 @@ public class SellerHomeController {
 
         } catch (IOException e) {
             e.printStackTrace();
-            showError("Không thể quay về màn hình đăng nhập !");
+            AlertUtil.showError("Không thể quay về màn hình đăng nhập !");
         }
     }
 
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 
 }

@@ -2,8 +2,8 @@ package com.auction.controller;
 
 import com.auction.model.Product;
 import com.auction.service.ProductDAO;
+import com.auction.util.AlertUtil;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -51,7 +51,7 @@ public class EditProductController {
         String status = statusComboBox.getValue();
 
         if(name.isEmpty() || description.isEmpty() || priceText.isEmpty() || status == null){
-            showError("Vui lòng ghi đầy đủ thông tin !");
+            AlertUtil.showError("Vui lòng ghi đầy đủ thông tin !");
             return;
         }
 
@@ -60,12 +60,12 @@ public class EditProductController {
         try {
             startPrice = Double.parseDouble(priceText);
         } catch (NumberFormatException e) {
-            showError("Vui lòng nhập số !");
+            AlertUtil.showError("Vui lòng nhập số !");
             return;
         }
 
         if (startPrice <= 0){
-            showError("Giá phải lớn hơn 0 !");
+            AlertUtil.showError("Giá phải lớn hơn 0 !");
             return;
         }
 
@@ -74,10 +74,10 @@ public class EditProductController {
                 startPrice,status);
 
         if (success){
-            showInfo("Cập nhật thành công !");
+            AlertUtil.showInfo("Cập nhật thành công !");
             closeWindow();
         }else {
-            showError("Cập nhật thất bại !");
+            AlertUtil.showError("Cập nhật thất bại !");
         }
     }
 
@@ -91,18 +91,5 @@ public class EditProductController {
         stage.close();
     }
 
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 }
 

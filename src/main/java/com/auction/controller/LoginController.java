@@ -3,12 +3,12 @@ package com.auction.controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Alert;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import com.auction.service.UserDAO;
+import com.auction.util.AlertUtil;
 
 
 public class LoginController {
@@ -24,12 +24,12 @@ public class LoginController {
         String password = passwordField.getText();
 
         if (user.isEmpty() || password.isEmpty()) {
-            showError("Vui lòng nhập đầy đủ!");
+            AlertUtil.showError("Vui lòng nhập đầy đủ!");
             return;
         }
 
         if (password.length() < 6) {
-            showError("Mật khẩu phải có ít nhất 6 kí tự!");
+            AlertUtil.showError("Mật khẩu phải có ít nhất 6 kí tự!");
             return;
         }
 
@@ -54,7 +54,7 @@ public class LoginController {
                 e.printStackTrace();
             }
         }else {
-            showError("Sai tài khoản hoặc mật khẩu");
+            AlertUtil.showError("Sai tài khoản hoặc mật khẩu");
         }
     }
 
@@ -74,12 +74,6 @@ public class LoginController {
         }
     }
 
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
 
 
 }
