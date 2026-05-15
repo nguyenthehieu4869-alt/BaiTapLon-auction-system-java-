@@ -14,6 +14,10 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.TableCell;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.property.SimpleStringProperty;
+import java.time.LocalDateTime;
 
 import java.io.IOException;
 
@@ -21,7 +25,10 @@ public class HomeController {
     @FXML
     private Label welcomeLabel;
 
+    private String username;
+
     public void setUser(String username) {
+        this.username = username;
         welcomeLabel.setText("Welcome, " + username);
     }
 
@@ -57,6 +64,11 @@ public class HomeController {
     private TableColumn<Product, String> statusColumn;
 
     @FXML
+    private TableColumn<Product, String> timeLeftColumn;
+
+    private Timeline countdownTimeline;
+
+    @FXML
     public void initialize() {
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -89,6 +101,13 @@ public class HomeController {
             }
         });
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+        statusColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(getDisplayStatus(cellData.getValue()))
+        );
+
+        timeLeftColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(formatTimeLeft(cellData.getValue()))
+        );
 
         ProductDAO productDAO = new ProductDAO();
         productTable.setItems(productDAO.getAllProducts());
@@ -97,6 +116,8 @@ public class HomeController {
                 System.out.println("Đã chọn: " + selectedProduct.getName());
             }
         });
+
+        startCountdownTimer();
     }
 
     @FXML
@@ -120,6 +141,7 @@ public class HomeController {
 
             ProductDetailController controller = loader.getController();
             controller.setProduct(selectedProduct);
+            controller.setUsername(username);
 
 
             Stage stage = (Stage) productTable.getScene().getWindow();
@@ -132,9 +154,46 @@ public class HomeController {
         }
     }
 
+    private String formatTimeLeft(Product product) {
+        if (product.getEndTime() == null) {
+            return "N/A";
+        }
 
+        LocalDateTime now = LocalDateTime.now();
 
+        if (!product.getEndTime().isAfter(now)) {
+            return "Ended";
+        }
 
+        java.time.Duration duration =
+                java.time.Duration.between(now, product.getEndTime());
+
+        long hours = duration.toHours();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    private String getDisplayStatus(Product product) {
+        if (product.getEndTime() != null &&
+                !product.getEndTime().isAfter(LocalDateTime.now())) {
+            return "FINISHED";
+        }
+
+        return product.getStatus();
+    }
+
+    private void startCountdownTimer() {
+        countdownTimeline = new Timeline(
+                new KeyFrame(javafx.util.Duration.seconds(1), event -> {
+                    productTable.refresh();
+                })
+        );
+
+        countdownTimeline.setCycleCount(Timeline.INDEFINITE);
+        countdownTimeline.play();
+    }
 }
 
 

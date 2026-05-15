@@ -52,7 +52,7 @@
 
         <Button maxWidth="Infinity" onAction="#handleRegister" prefHeight="45" style="-fx-background-color: #003c3a; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Đăng ký" />
 
-        <Button maxWidth="Infinity" onAction="#handleBack" prefHeight="40" style="-fx-background-color: transparent;; -fx-text-fill: #d99a22; -fx-font-weight: bold;" text="Quay lại đăng nhập" underline="true" />
+        <Button maxWidth="Infinity" onAction="#handleBack" prefHeight="40" style="-fx-background-color: transparent; -fx-text-fill: #d99a22; -fx-font-weight: bold;" text="Quay lại đăng nhập" underline="true" />
 
     </VBox>
 

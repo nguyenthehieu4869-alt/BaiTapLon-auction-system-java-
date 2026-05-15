@@ -19,6 +19,8 @@ import javafx.scene.control.Button;
 import com.auction.util.AlertUtil;
 import com.auction.util.PriceFormatter;
 
+import java.time.LocalDateTime;
+
 public class ProductDetailController {
 
     @FXML
@@ -68,6 +70,11 @@ public class ProductDetailController {
         try {
             double newPrice = Double.parseDouble(bidAmountField.getText());
 
+            if (isAuctionEnded()) {
+                AlertUtil.showError("Phiên đấu giá đã kết thúc, không thể đặt giá.");
+                return;
+            }
+
             BidResult result = bidService.placeBid(product, username, newPrice);
 
             if (!result.isSuccess()) {
@@ -85,6 +92,7 @@ public class ProductDetailController {
         } catch (NumberFormatException e) {
             AlertUtil.showError("Vui lòng nhập giá hợp lệ");
         }
+
     }
 
     @FXML
@@ -95,6 +103,9 @@ public class ProductDetailController {
             );
 
             Parent root=loader.load();
+
+            HomeController controller = loader.getController();
+            controller.setUser(username);
 
             Stage stage=(Stage) productNameLabel.getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -145,5 +156,20 @@ public class ProductDetailController {
             return;
         }
         bidHistoryTable.setItems(bidDAO.getBidsByProductId(product.getId()));
+    }
+
+    private boolean isAuctionEnded() {
+        if (product == null) {
+            return true;
+        }
+
+        if ("CLOSED".equalsIgnoreCase(product.getStatus())
+                || "FINISHED".equalsIgnoreCase(product.getStatus())
+                || "CANCELED".equalsIgnoreCase(product.getStatus())) {
+            return true;
+        }
+
+        return product.getEndTime() != null
+                && !product.getEndTime().isAfter(LocalDateTime.now());
     }
 }

@@ -24,9 +24,11 @@ public class BidService {
             return BidResult.failure("Giá đặt phải cao hơn giá hiện tại");
         }
 
-        String bidder = username != null && !username.trim().isEmpty()
-                ? username
-                : "Guest";
+        if (username == null || username.trim().isEmpty()) {
+            return BidResult.failure("Khong xac dinh duoc tai khoan bidder. Vui long dang nhap lai.");
+        }
+
+        String bidder = username.trim();
 
         boolean updated = productDAO.updateCurrentPrice(product.getId(), newPrice);
 

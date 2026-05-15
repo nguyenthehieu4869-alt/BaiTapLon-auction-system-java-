@@ -22,6 +22,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import com.auction.util.AlertUtil;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import java.time.LocalDateTime;
+
+
 public class SellerHomeController {
 
     @FXML
@@ -43,7 +48,13 @@ public class SellerHomeController {
     private TableColumn<Product, String> statusColumn;
 
     @FXML
+    private TableColumn<Product, String> timeLeftColumn;
+
+    @FXML
     private Label welcomeLabel;
+
+    @FXML
+    private TextField durationMinutesField;
 
     private String username;
 
@@ -51,15 +62,18 @@ public class SellerHomeController {
 
     private final DecimalFormat priceFormat = new DecimalFormat("#,### VND");
 
+    private Timeline countdownTimeline;
+
     @FXML
     private void initialize() {
         setupTableColumns();
-        loadProducts();
+        startCountdownTimer();
     }
 
     public void setUsername(String username) {
         this.username = username;
         welcomeLabel.setText("Welcome Seller: " + username);
+        loadProducts();
     }
 
     private void setupTableColumns() {
@@ -104,13 +118,63 @@ public class SellerHomeController {
         });
 
         statusColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getStatus())
+                new SimpleStringProperty(getDisplayStatus(cellData.getValue()))
+        );
+
+        timeLeftColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(formatTimeLeft(cellData.getValue()))
         );
     }
 
     private void loadProducts() {
-        ObservableList<Product> products = productDAO.getAllProducts();
+        if (username == null || username.isBlank()) {
+            productTable.setItems(javafx.collections.FXCollections.observableArrayList());
+            return;
+        }
+
+        ObservableList<Product> products = productDAO.getProductsBySeller(username);
         productTable.setItems(products);
+    }
+
+    private String formatTimeLeft(Product product) {
+        if (product.getEndTime() == null) {
+            return "N/A";
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (!product.getEndTime().isAfter(now)) {
+            return "Ended";
+        }
+
+        java.time.Duration duration =
+                java.time.Duration.between(now, product.getEndTime());
+
+        long hours = duration.toHours();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    private String getDisplayStatus(Product product) {
+        if (product.getEndTime() != null &&
+                !product.getEndTime().isAfter(LocalDateTime.now())) {
+            return "FINISHED";
+        }
+
+        return product.getStatus();
+    }
+
+    private void startCountdownTimer() {
+        countdownTimeline = new Timeline(
+                new KeyFrame(javafx.util.Duration.seconds(1), event -> {
+                    productTable.refresh();
+                })
+        );
+
+        countdownTimeline.setCycleCount(Timeline.INDEFINITE);
+        countdownTimeline.play();
     }
 
     @FXML
@@ -124,9 +188,12 @@ public class SellerHomeController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/view/add_product.fxml"));
             Parent root = loader.load();
 
+            AddProductController controller = loader.getController();
+            controller.setSellerUsername(username);
+
             Stage stage = new Stage();
             stage.setTitle("Add Product");
-            stage.setScene(new Scene(root, 500, 400));
+            stage.setScene(new Scene(root, 720, 740));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
 
@@ -186,7 +253,7 @@ public class SellerHomeController {
 
             Stage stage = new Stage();
             stage.setTitle("Edit Product");
-            stage.setScene(new Scene(root, 500, 450));
+            stage.setScene(new Scene(root, 720, 680));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
 

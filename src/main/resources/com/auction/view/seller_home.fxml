@@ -63,6 +63,8 @@
                 <TableColumn fx:id="currentPriceColumn" prefWidth="190.0" text="Current Price" />
 
                 <TableColumn fx:id="statusColumn" prefWidth="160.0" text="Status" />
+
+                <TableColumn fx:id="timeLeftColumn" prefWidth="160.0" text="Time Left" />
             </columns>
         </TableView>
     </center>

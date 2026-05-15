@@ -13,9 +13,12 @@ CREATE TABLE products (
                           id INT AUTO_INCREMENT PRIMARY KEY,
                           name VARCHAR(100) NOT NULL,
                           description TEXT,
+                          image_path VARCHAR(500),
                           start_price DOUBLE NOT NULL,
                           current_price DOUBLE NOT NULL,
                           status VARCHAR(20) DEFAULT 'OPEN',
+                          start_time DATETIME,
+                          end_time DATETIME,
                           seller_username VARCHAR(50)
 );
 
@@ -31,10 +34,11 @@ CREATE TABLE bids (
 INSERT INTO users (username, email, password)
 VALUES
     ('seller1', 'seller1@gmail.com', '123456'),
+    ('seller2', 'seller2@gmail.com', '123456'),
     ('bidder1', 'bidder1@gmail.com', '123456');
 
-INSERT INTO products (name, description, start_price, current_price, status, seller_username)
+INSERT INTO products (name, description, start_price, current_price, status, start_time, end_time, seller_username)
 VALUES
-    ('iPhone 15 Pro', 'Dien thoai Apple 256GB', 15000000, 15000000, 'OPEN', 'seller1'),
-    ('Laptop Gaming', 'Laptop choi game cau hinh cao', 20000000, 20000000, 'OPEN', 'seller1'),
-    ('Tai nghe Sony', 'Tai nghe chong on', 2000000, 2000000, 'OPEN', 'seller2');
+    ('iPhone 15 Pro', 'Dien thoai Apple 256GB', 15000000, 15000000, 'OPEN', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller1'),
+    ('Laptop Gaming', 'Laptop choi game cau hinh cao', 20000000, 20000000, 'OPEN', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller1'),
+    ('Tai nghe Sony', 'Tai nghe chong on', 2000000, 2000000, 'OPEN', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller2');

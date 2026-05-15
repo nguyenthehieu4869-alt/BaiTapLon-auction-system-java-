@@ -17,7 +17,6 @@
    
     <VBox prefWidth="420" spacing="24" style="-fx-background-color: #0c403e; -fx-background-radius: 0; -fx-padding: 50;">
 
-        <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 22px; -fx-font-weight: bold;" textFill="#413b3b" />
       <ImageView fitHeight="138.0" fitWidth="237.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../../../logo/logo2.png" />
