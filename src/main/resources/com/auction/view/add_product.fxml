@@ -41,7 +41,7 @@
 
                             <children>
                                 <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Name" />
-                                <TextField fx:id="nameField" prefHeight="42.0" promptText="Nhập tên sản phẩm" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47;" GridPane.columnIndex="1" />
+                                <TextField fx:id="nameField" prefHeight="42.0" promptText="Nhập tên sản phẩm" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47; -fx-font-weight: bold;" GridPane.columnIndex="1" />
 
                                 <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Description" GridPane.rowIndex="1">
                            <padding>
@@ -49,7 +49,7 @@
                            </padding></Label>
                                 <VBox spacing="12.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                     <children>
-                                        <TextArea fx:id="descriptionArea" prefHeight="110.0" promptText="Nhập thông tin sản phẩm và tải ảnh nếu có (nhập thông tin là bắt buộc, tải ảnh lên là optional)" style="-fx-control-inner-background: #003c3a; -fx-background-color: #f8f5ea; -fx-background-insets: 12; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47;" wrapText="true" />
+                                        <TextArea fx:id="descriptionArea" prefHeight="110.0" promptText="Nhập thông tin sản phẩm và tải ảnh nếu có (nhập thông tin là bắt buộc, tải ảnh lên là optional)" style="-fx-control-inner-background: #003c3a; -fx-background-color: #f8f5ea; -fx-background-insets: 12; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47; -fx-font-weight: bold;" wrapText="true" />
 
                                         <VBox spacing="10.0" style="-fx-background-color: rgba(212, 175, 55, 0.08);                                                      -fx-background-radius: 16;                                                      -fx-border-color: rgba(212, 175, 55, 0.45);                                                      -fx-border-radius: 16;                                                      -fx-border-width: 1;                                                      -fx-padding: 14;">
                                             <children>
@@ -66,7 +66,7 @@
 
                                                         <VBox alignment="CENTER_LEFT" spacing="12.0">
                                                             <children>
-                                                                <Label fx:id="imageStatusLabel" maxWidth="200.0" style="-fx-text-fill: #f8f5ea; -fx-font-size: 12px;" text="Chưa tải ảnh. Bạn có thể bỏ qua mục này." wrapText="true" />
+                                                                <Label fx:id="imageStatusLabel" maxWidth="200.0" style="-fx-text-fill: #f8f5ea; -fx-font-size: 12px;" text="Tải ảnh lên ở đây" wrapText="true" />
 
                                                                 <HBox spacing="10.0">
                                                                     <children>
@@ -84,10 +84,10 @@
                                 </VBox>
 
                                 <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Start Price" GridPane.rowIndex="2" />
-                                <TextField fx:id="startPriceField" prefHeight="42.0" promptText="Nhập giá khởi điểm" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #0f1f1f; -fx-prompt-text-fill: #7a6e47;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <TextField fx:id="startPriceField" prefHeight="42.0" promptText="Nhập giá khởi điểm" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
                                 <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Duration (minutes)" GridPane.rowIndex="3" />
-                                <TextField fx:id="durationMinutesField" prefHeight="42.0" promptText="Nhập thời lượng đấu giá" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #0f1f1f; -fx-prompt-text-fill: #7a6e47;" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                <TextField fx:id="durationMinutesField" prefHeight="42.0" promptText="Nhập thời lượng đấu giá" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                             </children>
                      <rowConstraints>
                         <RowConstraints />

@@ -56,11 +56,7 @@ public class RegisterController {
         boolean success = userDAO.register(username, email, password);
 
         if (success) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setHeaderText(null);
-            alert.setContentText("Đăng ký thành công!");
-            alert.showAndWait();
-
+            AlertUtil.showInfo("Đăng ký thành công!");
             switchToLogin();
         } else {
             AlertUtil.showError("Username hoặc email đã tồn tại!");
@@ -78,8 +74,9 @@ public class RegisterController {
             Parent root = loader.load();
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(root, 1000, 650));
-            stage.centerOnScreen();
+            stage.setScene(new Scene(root));
+            stage.setMaximized(true);
+            stage.show();
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import com.auction.model.Product;
+import com.auction.service.BidDAO;
 import com.auction.service.ProductDAO;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -25,6 +26,9 @@ public class HomeController {
     @FXML
     private Label welcomeLabel;
 
+    @FXML
+    private Label emptyStateLabel;
+
     private String username;
 
     public void setUser(String username) {
@@ -40,7 +44,10 @@ public class HomeController {
             );
 
             Stage stage = (Stage) welcomeLabel.getScene().getWindow();
+            stage.setMaximized(false);
             stage.setScene(new Scene(root, 1200, 700));
+            stage.setMaximized(true);
+            stage.show();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -70,6 +77,12 @@ public class HomeController {
 
     @FXML
     public void initialize() {
+        productTable.getStyleClass().add("bidder-table");
+        productTable.setFixedCellSize(42);
+        productTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+        startPriceColumn.setStyle("-fx-alignment: CENTER_RIGHT;");
+        currentPriceColumn.setStyle("-fx-alignment: CENTER_RIGHT;");
+        timeLeftColumn.setStyle("-fx-alignment: CENTER;");
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
@@ -100,10 +113,31 @@ public class HomeController {
                 }
             }
         });
-        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
         statusColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(getDisplayStatus(cellData.getValue()))
         );
+        statusColumn.setCellFactory(column -> new TableCell<Product, String>() {
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                getStyleClass().removeAll("status-open", "status-finished", "status-muted");
+
+                if (empty || status == null) {
+                    setText(null);
+                    return;
+                }
+
+                setText(status);
+
+                if (status.startsWith("OPENING") || status.equalsIgnoreCase("OPEN")) {
+                    getStyleClass().add("status-open");
+                } else if (status.startsWith("FINISHED") || status.equalsIgnoreCase("CLOSED")) {
+                    getStyleClass().add("status-finished");
+                } else {
+                    getStyleClass().add("status-muted");
+                }
+            }
+        });
 
         timeLeftColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(formatTimeLeft(cellData.getValue()))
@@ -111,10 +145,9 @@ public class HomeController {
 
         ProductDAO productDAO = new ProductDAO();
         productTable.setItems(productDAO.getAllProducts());
+        updateEmptyStateMessage();
         productTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedProduct) -> {
-            if (selectedProduct != null) {
-                System.out.println("Đã chọn: " + selectedProduct.getName());
-            }
+
         });
 
         startCountdownTimer();
@@ -124,6 +157,7 @@ public class HomeController {
     private void handleRefresh() {
         ProductDAO productDAO = new ProductDAO();
         productTable.setItems(productDAO.getAllProducts());
+        updateEmptyStateMessage();
     }
 
     @FXML
@@ -145,7 +179,9 @@ public class HomeController {
 
 
             Stage stage = (Stage) productTable.getScene().getWindow();
-            stage.setScene(new Scene(root));
+            stage.setMaximized(false);
+            stage.setScene(new Scene(root, 1200, 700));
+            stage.setMaximized(true);
             stage.show();
 
         } catch (IOException e) {
@@ -176,23 +212,55 @@ public class HomeController {
     }
 
     private String getDisplayStatus(Product product) {
+        String leaderUsername = new BidDAO().getWinnerUsernameByProductId(product.getId());
+
         if (product.getEndTime() != null &&
                 !product.getEndTime().isAfter(LocalDateTime.now())) {
-            return "FINISHED";
+            return leaderUsername == null || leaderUsername.isBlank()
+                    ? "FINISHED"
+                    : "FINISHED - Winner: " + leaderUsername;
         }
 
-        return product.getStatus();
+        return leaderUsername == null || leaderUsername.isBlank()
+                ? product.getStatus()
+                : "OPENING - Leader: " + leaderUsername;
     }
 
     private void startCountdownTimer() {
         countdownTimeline = new Timeline(
                 new KeyFrame(javafx.util.Duration.seconds(1), event -> {
                     productTable.refresh();
+                    updateEmptyStateMessage();
                 })
         );
 
         countdownTimeline.setCycleCount(Timeline.INDEFINITE);
         countdownTimeline.play();
+    }
+
+    private void updateEmptyStateMessage() {
+        if (emptyStateLabel == null || productTable == null) {
+            return;
+        }
+
+        boolean hasAvailableProducts = productTable.getItems() != null
+                && productTable.getItems().stream().anyMatch(this::isAuctionAvailable);
+
+        emptyStateLabel.setVisible(!hasAvailableProducts);
+        emptyStateLabel.setManaged(!hasAvailableProducts);
+    }
+
+    private boolean isAuctionAvailable(Product product) {
+        if (product == null) {
+            return false;
+        }
+
+        if (product.getEndTime() != null && !product.getEndTime().isAfter(LocalDateTime.now())) {
+            return false;
+        }
+
+        String status = product.getStatus();
+        return status != null && !status.equalsIgnoreCase("DELETED") && !status.equalsIgnoreCase("CLOSED");
     }
 }
 

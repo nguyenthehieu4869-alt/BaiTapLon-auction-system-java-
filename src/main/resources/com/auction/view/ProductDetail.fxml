@@ -6,52 +6,80 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="650.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.ProductDetailController">
+<AnchorPane prefHeight="760.0" prefWidth="920.0" style="-fx-background-color: linear-gradient(to bottom right, #003c3a, #012724);" stylesheets="@../style/seller.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.ProductDetailController">
 
    <children>
-      <VBox layoutX="150.0" layoutY="30.0" prefHeight="590.0" prefWidth="500.0" spacing="12.0">
+      <VBox alignment="CENTER" layoutX="80.0" layoutY="24.0" prefHeight="712.0" prefWidth="760.0" spacing="16.0" style="-fx-background-color: rgba(0, 26, 24, 0.72); -fx-background-radius: 24; -fx-border-color: #d4af37; -fx-border-width: 1.5; -fx-border-radius: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 24, 0.25, 0, 8);">
          <padding>
-            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            <Insets bottom="24.0" left="28.0" right="28.0" top="24.0" />
          </padding>
 
          <children>
-            <Label text="Product Detail">
+            <Label style="-fx-font-weight: bold; -fx-letter-spacing: 1px;" text="Product Detail" textFill="#d4af37">
                <font>
-                  <Font size="24.0" />
+                  <Font size="30.0" />
                </font>
             </Label>
 
-            <Label fx:id="productNameLabel" text="Name:" />
+            <HBox prefWidth="700.0" spacing="18.0" style="-fx-background-color: rgba(255,255,255,0.06); -fx-background-radius: 16; -fx-border-color: rgba(212,175,55,0.35); -fx-border-radius: 16; -fx-padding: 18;">
+               <children>
+                  <VBox prefWidth="420.0" spacing="10.0">
+                     <children>
+                        <Label fx:id="productNameLabel" style="-fx-font-size: 15px; -fx-text-fill: #d4af37; -fx-font-weight: bold;" text="Name:" textFill="#f4d675" />
 
-            <Label fx:id="descriptionLabel" text="Description:" wrapText="true" />
+                        <Label fx:id="descriptionLabel" maxWidth="400.0" style="-fx-font-size: 15px; -fx-text-fill: #d4af37; -fx-font-weight: bold; -fx-line-spacing: 3px;" text="Description:" wrapText="true" />
 
-            <Label fx:id="currentPriceLabel" text="Current Price:" />
+                        <Label fx:id="currentPriceLabel" style="-fx-font-size: 15px; -fx-font-weight: bold;" text="Current Price:" textFill="#d4af37" />
 
-            <Label fx:id="statusLabel" text="Status:" />
+                        <Label fx:id="statusLabel" style="-fx-font-size: 15px; -fx-text-fill: #d4af37; -fx-font-weight: bold;" text="Status:" textFill="#f4d675" />
+                     </children>
+                  </VBox>
 
-            <TextField fx:id="bidAmountField" promptText="Nhập mức giá thầu" />
+                  <VBox alignment="TOP_CENTER" prefWidth="220.0" spacing="10.0">
+                     <children>
+                        <Label style="-fx-font-size: 15px; -fx-text-fill: #d4af37; -fx-font-weight: bold;" text="Product Image" />
 
-            <Button fx:id="placeBidButton" mnemonicParsing="false" onAction="#handlePlaceBid" text="Đặt giá" />
+                        <StackPane prefHeight="180.0" prefWidth="220.0" style="-fx-background-color: rgba(248, 242, 220, 0.08); -fx-background-radius: 16; -fx-border-color: #d4af37; -fx-border-width: 1.1; -fx-border-radius: 16;">
+                           <children>
+                              <ImageView fx:id="productImageView" fitHeight="168.0" fitWidth="208.0" pickOnBounds="true" preserveRatio="true" />
+                              <Label fx:id="imagePlaceholderLabel" maxWidth="180.0" style="-fx-text-fill: #f8f2dc; -fx-font-size: 12px; -fx-font-weight: bold;" text="No product image" wrapText="true" />
+                           </children>
+                        </StackPane>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
 
-            <Label text="Bid History">
+            <HBox alignment="CENTER" prefWidth="700.0" spacing="12.0">
+               <children>
+                  <TextField fx:id="bidAmountField" prefHeight="38.0" prefWidth="360.0" promptText="Nhập mức giá" style="-fx-background-color: #f8f2dc; -fx-background-radius: 18; -fx-border-color: #d4af37; -fx-border-radius: 18; -fx-text-fill: #003c3a; -fx-prompt-text-fill: #6f6a58; -fx-font-weight: bold; -fx-padding: 0 16;" />
+
+                  <Button fx:id="placeBidButton" mnemonicParsing="false" onAction="#handlePlaceBid" prefHeight="38.0" prefWidth="120.0" style="-fx-background-color: #d4af37; -fx-background-radius: 18; -fx-font-weight: bold; -fx-cursor: hand;" text="Đặt giá" textFill="#003c3a" />
+               </children>
+            </HBox>
+
+            <Label style="-fx-font-weight: bold;" text="Bid History" textFill="#d4af37">
                <font>
-                  <Font size="20.0" />
+                  <Font size="22.0" />
                </font>
             </Label>
 
-            <TableView fx:id="bidHistoryTable" prefHeight="220.0" prefWidth="460.0">
+            <TableView fx:id="bidHistoryTable" prefHeight="260.0" prefWidth="700.0" style="-fx-background-color: #f8f2dc; -fx-background-radius: 14; -fx-border-color: #d4af37; -fx-border-radius: 14;">
                <columns>
-                  <TableColumn fx:id="bidderUsernameColumn" prefWidth="130.0" text="Bidder" />
-                  <TableColumn fx:id="bidPriceColumn" prefWidth="148.0" text="Bid price" />
-                  <TableColumn fx:id="bidTimeColumn" prefWidth="182.0" text="Time" />
+                  <TableColumn fx:id="bidderUsernameColumn" prefWidth="205.0" text="Bidder" />
+                  <TableColumn fx:id="bidPriceColumn" prefWidth="205.0" text="Bid price" />
+                  <TableColumn fx:id="bidTimeColumn" prefWidth="288.0" text="Time" />
                </columns>
             </TableView>
 
-            <Button fx:id="backButton" mnemonicParsing="false" onAction="#handleBack" text="Back" />
+            <Button fx:id="backButton" mnemonicParsing="false" onAction="#handleBack" prefHeight="36.0" prefWidth="110.0" style="-fx-background-color: #d3d3d3; -fx-background-radius: 18; -fx-font-weight: bold; -fx-cursor: hand;" text="Back" textFill="#003c3a" />
          </children>
       </VBox>
    </children>

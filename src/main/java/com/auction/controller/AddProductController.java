@@ -88,7 +88,7 @@ public class AddProductController {
         String durationText = durationMinutesField.getText().trim();
 
         if (name.isEmpty() || description.isEmpty() || priceText.isEmpty() || durationText.isEmpty()) {
-            AlertUtil.showError("Vui long nhap day du thong tin");
+            AlertUtil.showError("Vui lòng nhập đầy đủ thông tin !");
             return;
         }
 
@@ -97,12 +97,12 @@ public class AddProductController {
         try {
             startPrice = Double.parseDouble(priceText);
         } catch (NumberFormatException e) {
-            AlertUtil.showError("Gia khoi diem phai la so");
+            AlertUtil.showError("Vui lòng nhập giá khởi điểm hợp lệ !");
             return;
         }
 
         if (startPrice <= 0) {
-            AlertUtil.showError("Gia khoi diem phai lon hon 0");
+            AlertUtil.showError("Giá khởi điểm phải lớn hơn 0 !");
             return;
         }
 
@@ -111,12 +111,12 @@ public class AddProductController {
         try {
             durationMinutes = Integer.parseInt(durationText);
         } catch (NumberFormatException e) {
-            AlertUtil.showError("Thoi luong dau gia phai la so phut hop le");
+            AlertUtil.showError("Vui lòng nhập thời lượng đấu giá hợp lệ !");
             return;
         }
 
         if (durationMinutes <= 0) {
-            AlertUtil.showError("Thoi luong dau gia phai lon hon 0 phut");
+            AlertUtil.showError("Vui lòng nhập thời lượng đấu giá hợp lệ !");
             return;
         }
 
@@ -124,7 +124,7 @@ public class AddProductController {
         LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
 
         if (sellerUsername == null || sellerUsername.isBlank()) {
-            AlertUtil.showError("Khong xac dinh duoc tai khoan seller");
+            AlertUtil.showError("Không xác định được tài khoản seller !");
             return;
         }
 
@@ -139,10 +139,10 @@ public class AddProductController {
         );
 
         if (success) {
-            AlertUtil.showInfo("Them san pham thanh cong");
+            AlertUtil.showInfo("Thêm  sản phẩm thành công !");
             closeWindow();
         } else {
-            AlertUtil.showError("Them san pham that bai");
+            AlertUtil.showError("Thêm sản phẩm thất bại !");
         }
     }
 

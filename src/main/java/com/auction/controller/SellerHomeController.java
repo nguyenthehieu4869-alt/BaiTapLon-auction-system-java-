@@ -16,7 +16,6 @@ import javafx.beans.property.SimpleStringProperty;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.Optional;
 
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -214,14 +213,7 @@ public class SellerHomeController {
             return;
         }
 
-        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Xác nhận xoá");
-        confirmAlert.setHeaderText(null);
-        confirmAlert.setContentText("Bạn có muốn xoá: " + selectedProduct.getName() + "?");
-
-        Optional<ButtonType> result = confirmAlert.showAndWait();
-
-        if (result.isPresent() && result.get() == ButtonType.OK){
+        if (AlertUtil.showConfirm("Xác nhận xoá", "Bạn có muốn xoá: " + selectedProduct.getName() + "?")){
             boolean success = productDAO.deleteProduct(selectedProduct.getId());
 
             if (success){
@@ -279,14 +271,8 @@ public class SellerHomeController {
             return;
         }
 
-        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Xác nhận đóng đấu giá");
-        confirmAlert.setHeaderText(null);
-        confirmAlert.setContentText("Bạn có chắc muốn đóng đấu giá sản phẩm: " + selectedProduct.getName() + "?");
-
-        Optional<ButtonType> result = confirmAlert.showAndWait();
-
-        if (result.isPresent() && result.get() == ButtonType.OK) {
+        if (AlertUtil.showConfirm("Xác nhận đóng đấu giá",
+                "Bạn có chắc muốn đóng đấu giá sản phẩm: " + selectedProduct.getName() + "?")) {
             boolean success = productDAO.closeAuction(selectedProduct.getId());
 
             if (success) {
@@ -304,6 +290,7 @@ public class SellerHomeController {
             Parent root = FXMLLoader.load(getClass().getResource("/com/auction/view/login.fxml"));
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setMaximized(false);
             stage.setScene(new Scene(root, 1200, 700));
             stage.setMaximized(true);
             stage.show();

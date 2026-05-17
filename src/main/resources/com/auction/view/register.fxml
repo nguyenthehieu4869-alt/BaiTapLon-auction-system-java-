@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox prefHeight="650" prefWidth="1000" style="-fx-background-color: #eeeeee;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.RegisterController">
+<HBox prefHeight="650" prefWidth="1000" style="-fx-background-color: #003c3a;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.RegisterController">
 
     <!-- LEFT PANEL -->
     <VBox prefWidth="420" spacing="24" style="-fx-background-color: #003c3a; -fx-padding: 45;">
@@ -35,22 +35,22 @@
 
 
     <!-- RIGHT PANEL -->
-    <VBox alignment="CENTER_LEFT" prefWidth="580" spacing="14" style="-fx-background-color: white;                  -fx-padding: 70;">
+    <VBox alignment="CENTER_LEFT" maxWidth="Infinity" prefWidth="580" spacing="14" style="-fx-background-color: #003c3a; -fx-padding: 70;" HBox.hgrow="ALWAYS">
 
-        <Label style="-fx-font-size: 34px;                       -fx-font-weight: bold;                       -fx-text-fill: #1f2937;" text="Đăng ký" />
+        <Label style="-fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #d4af37; -fx-font-style: italic;" text="Đăng ký" />
 
-        <Label style="-fx-text-fill: #6b7280;                       -fx-font-size: 14px;" text="Tạo tài khoản mới" />
+        <Label style="-fx-text-fill: #d4af36; -fx-font-size: 14px;" text="Tạo tài khoản mới" />
 
-        <Label text="Username" />
+        <Label text="Username" textFill="#d4af36" />
         <TextField fx:id="usernameField" prefHeight="42" promptText="Nhập username" style="-fx-background-radius: 8;                           -fx-border-radius: 8;                           -fx-border-color: #d1d5db;                           -fx-background-color: white;" />
 
-        <Label text="Email" />
+        <Label text="Email" textFill="#d4af36" />
         <TextField fx:id="emailField" prefHeight="42" promptText="Nhập email" style="-fx-background-radius: 8;                           -fx-border-radius: 8;                           -fx-border-color: #d1d5db;                           -fx-background-color: white;" />
 
-        <Label text="Mật khẩu" />
+        <Label text="Mật khẩu" textFill="#d4af36" />
         <PasswordField fx:id="passwordField" prefHeight="42" promptText="Nhập mật khẩu" style="-fx-background-radius: 8;                               -fx-border-radius: 8;                               -fx-border-color: #d1d5db;                               -fx-background-color: white;" />
 
-        <Button maxWidth="Infinity" onAction="#handleRegister" prefHeight="45" style="-fx-background-color: #003c3a; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Đăng ký" />
+        <Button maxWidth="Infinity" onAction="#handleRegister" prefHeight="45" style="-fx-background-color: #c49a47; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Đăng ký" />
 
         <Button maxWidth="Infinity" onAction="#handleBack" prefHeight="40" style="-fx-background-color: transparent; -fx-text-fill: #d99a22; -fx-font-weight: bold;" text="Quay lại đăng nhập" underline="true" />
 

@@ -14,7 +14,6 @@
         <maven.compiler.release>17</maven.compiler.release>
         <javafx.version>21.0.2</javafx.version>
         <mysql.connector.version>9.7.0</mysql.connector.version>
-        <javafx.platform>win</javafx.platform>
         <app.mainClass>com.auction.Main</app.mainClass>
         <app.name>auction-client</app.name>
     </properties>
@@ -24,13 +23,11 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
         </dependency>
         <dependency>
             <groupId>com.mysql</groupId>

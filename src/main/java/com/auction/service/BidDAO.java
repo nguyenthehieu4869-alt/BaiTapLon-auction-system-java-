@@ -72,4 +72,28 @@ public class BidDAO {
         return bids;
 
     }
+
+    public String getWinnerUsernameByProductId(int productId) {
+        String sql = "SELECT bidder_username FROM bids WHERE product_id = ? ORDER BY bid_price DESC, bid_time ASC LIMIT 1";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return null;
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, productId);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getString("bidder_username");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 }

@@ -12,10 +12,9 @@ public class Main extends Application {
         FXMLLoader loader=new FXMLLoader(getClass().getResource("/com/auction/view/login.fxml")
         );
 
-        Scene scene=new Scene(loader.load(),1000,650);
+        Scene scene=new Scene(loader.load());
         stage.setResizable(true);
-        stage.centerOnScreen();
-
+        stage.setMaximized(true);
         stage.setScene(scene);
         stage.setTitle("Hệ thống đấu giá trực tuyến");
         stage.show();

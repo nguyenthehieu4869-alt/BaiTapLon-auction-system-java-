@@ -11,7 +11,6 @@ public class DBConnection {
     public static Connection getConnection(){
         try {
             Connection connection=DriverManager.getConnection(URL,USER,PASSWORD);
-            System.out.println("Kết nối thành công");
             return connection;
         }catch(Exception e){
             System.out.println("Kết nối thất bại");

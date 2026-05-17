@@ -64,7 +64,7 @@ public class EditProductController {
     @FXML
     private void handleChooseImage() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Chon anh san pham");
+        fileChooser.setTitle("Chọn ảnh sản phẩm");
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter(
                         "Image Files",
@@ -92,7 +92,7 @@ public class EditProductController {
     @FXML
     private void handleSave() {
         if (product == null) {
-            AlertUtil.showError("Khong tim thay san pham can cap nhat");
+            AlertUtil.showError("Không tìm thấy sản phẩm !");
             return;
         }
 
@@ -102,7 +102,7 @@ public class EditProductController {
         String status = statusComboBox.getValue();
 
         if (name.isEmpty() || description.isEmpty() || priceText.isEmpty() || status == null) {
-            AlertUtil.showError("Vui long ghi day du thong tin bat buoc");
+            AlertUtil.showError("Vui lòng nhập đầy đủ thông tin !");
             return;
         }
 
@@ -111,12 +111,12 @@ public class EditProductController {
         try {
             startPrice = Double.parseDouble(priceText);
         } catch (NumberFormatException e) {
-            AlertUtil.showError("Vui long nhap so");
+            AlertUtil.showError("Vui lòng nhập giá khởi điểm hợp lệ !");
             return;
         }
 
         if (startPrice <= 0) {
-            AlertUtil.showError("Gia phai lon hon 0");
+            AlertUtil.showError("Vui lòng nhập giá khởi điểm hợp lệ !");
             return;
         }
 
@@ -130,10 +130,10 @@ public class EditProductController {
         );
 
         if (success) {
-            AlertUtil.showInfo("Cap nhat thanh cong");
+            AlertUtil.showInfo("Cập nhật thành công !");
             closeWindow();
         } else {
-            AlertUtil.showError("Cap nhat that bai");
+            AlertUtil.showError("Cập nhật thất bại !");
         }
     }
 
@@ -149,7 +149,7 @@ public class EditProductController {
 
         if (imagePath == null || imagePath.isBlank()) {
             productImagePreview.setImage(null);
-            imageStatusLabel.setText("Chua tai anh. Ban co the bo qua muc nay.");
+            imageStatusLabel.setText("Bạn có thể bỏ qua việc tải ảnh.");
             imagePlaceholderLabel.setVisible(true);
             return;
         }
@@ -157,7 +157,7 @@ public class EditProductController {
         File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
             productImagePreview.setImage(null);
-            imageStatusLabel.setText("Anh da luu khong con ton tai. Ban co the chon anh khac.");
+            imageStatusLabel.setText("Ảnh đã lưu không tồn tại !");
             imagePlaceholderLabel.setVisible(true);
             return;
         }
@@ -166,17 +166,17 @@ public class EditProductController {
             Image image = new Image(imageFile.toURI().toString(), 180, 120, true, true);
             if (image.isError()) {
                 productImagePreview.setImage(null);
-                imageStatusLabel.setText("Khong doc duoc anh. Hay chon file khac.");
+                imageStatusLabel.setText(" Không đọc được ảnh !");
                 imagePlaceholderLabel.setVisible(true);
                 return;
             }
 
             productImagePreview.setImage(image);
-            imageStatusLabel.setText("Da chon anh: " + imageFile.getName());
+            imageStatusLabel.setText("Đã chọn ảnh : " + imageFile.getName());
             imagePlaceholderLabel.setVisible(false);
         } catch (Exception e) {
             productImagePreview.setImage(null);
-            imageStatusLabel.setText("Khong mo duoc anh. Hay chon file khac.");
+            imageStatusLabel.setText("Không mở được ảnh !");
             imagePlaceholderLabel.setVisible(true);
         }
     }

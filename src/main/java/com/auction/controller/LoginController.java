@@ -46,6 +46,7 @@ public class LoginController {
 
 
                 Stage stage = (Stage) usernameField.getScene().getWindow();
+                stage.setMaximized(false);
                 stage.setScene(new Scene(root, 1200, 700));
                 stage.setMaximized(true);
                 stage.show();
@@ -65,7 +66,7 @@ public class LoginController {
             Parent root = loader.load();
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            stage.setScene(new Scene(root, 1200, 700));
+            stage.setScene(new Scene(root));
             stage.setMaximized(true);
             stage.show();
 

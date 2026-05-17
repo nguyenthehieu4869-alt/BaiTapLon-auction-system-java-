@@ -11,7 +11,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-import static com.auction.util.AlertUtil.showError;
 
 public class RoleSelectionController {
     private String username;
@@ -57,6 +56,7 @@ public class RoleSelectionController {
             }
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setMaximized(false);
             stage.setScene(new Scene(root, 1200, 700));
             stage.setMaximized(true);
             stage.show();
