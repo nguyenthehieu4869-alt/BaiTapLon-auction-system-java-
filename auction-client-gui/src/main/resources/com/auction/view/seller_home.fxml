@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="700.0" prefWidth="1200.0" style="-fx-background-color: linear-gradient(to bottom right, #031c1f, #08313a);" xmlns="http://javafx.com/javafx/26"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.auction.controller.SellerHomeController"
+            stylesheets="@../style/seller.css">
+
+    <top>
+        <VBox spacing="16.0" style="-fx-padding: 22 32 8 32;" BorderPane.alignment="CENTER_LEFT">
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <Label text="Seller Dashboard" style="-fx-text-fill: #f5d76e; -fx-font-weight: 900;" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="welcomeLabel" style="-fx-text-fill: #cde8e6; -fx-font-size: 14px; -fx-font-weight: 700;" text="Welcome Seller" />
+                </HBox>
+
+                <Label style="-fx-text-fill: #9ec9c5; -fx-font-size: 13px;" text="Manage products, monitor bids, and control auctions from a cleaner workspace." />
+
+                <HBox spacing="12.0" style="-fx-background-color: rgba(255,255,255,0.04); -fx-background-radius: 14; -fx-padding: 14 16 14 16; -fx-border-color: rgba(212,175,55,0.18); -fx-border-radius: 14;">
+                    <children>
+                        <Button onAction="#handleAddProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #1bbf7a; -fx-text-fill: white; -fx-background-radius: 10;" text="Add Product" />
+                        <Button onAction="#handleEditProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #2f81f7; -fx-text-fill: white; -fx-background-radius: 10;" text="Edit Product" />
+                        <Button onAction="#handleDeleteProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #f97316; -fx-text-fill: white; -fx-background-radius: 10;" text="Delete Product" />
+                        <Button onAction="#handleCloseAuction" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37; -fx-text-fill: #07211f; -fx-background-radius: 10;" text="Close Auction" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button onAction="#handleRefresh" prefWidth="110.0" style="-fx-font-weight: bold; -fx-background-color: #4dd4a5; -fx-text-fill: #06211f; -fx-background-radius: 10;" text="Refresh" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox style="-fx-padding: 10 32 10 32;">
+            <TableView fx:id="productTable" BorderPane.alignment="CENTER" styleClass="bidder-table">
+                <BorderPane.margin>
+                    <Insets bottom="20.0" left="0.0" right="0.0" top="0.0" />
+                </BorderPane.margin>
+
+                <columns>
+                    <TableColumn fx:id="idColumn" prefWidth="70.0" text="ID" />
+                    <TableColumn fx:id="nameColumn" prefWidth="280.0" text="Name" />
+                    <TableColumn fx:id="startPriceColumn" prefWidth="180.0" text="Start Price" />
+                    <TableColumn fx:id="currentPriceColumn" prefWidth="180.0" text="Current Price" />
+                    <TableColumn fx:id="statusColumn" prefWidth="160.0" text="Status" />
+                    <TableColumn fx:id="timeLeftColumn" prefWidth="160.0" text="Time Left" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" BorderPane.alignment="CENTER_RIGHT" style="-fx-padding: 0 32 24 32;">
+            <children>
+                <Button prefWidth="150.0" style="-fx-background-color: #b71c1c; -fx-font-weight: bold; -fx-text-fill: white; -fx-background-radius: 10;" text="Logout" onAction="#handleLogout" />
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>
