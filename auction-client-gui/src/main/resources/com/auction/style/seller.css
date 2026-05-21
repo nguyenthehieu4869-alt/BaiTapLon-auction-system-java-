@@ -1,0 +1,131 @@
+.table-view {
+    -fx-background-color: transparent;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(212,175,55,0.22);
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #d4af37;
+    -fx-background-radius: 14 14 0 0;
+}
+
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #08252d;
+    -fx-font-weight: 800;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 14;
+    -fx-padding: 0 14 0 14;
+}
+
+.table-row-cell {
+    -fx-background-color: #082433;
+    -fx-border-color: transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #0b2d3f;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #12415a;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #d4af37;
+}
+
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: #062f2d;
+    -fx-font-weight: 800;
+}
+
+.bidder-table {
+    -fx-background-color: transparent;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(212,175,55,0.22);
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 0;
+}
+
+.bidder-table .column-header-background {
+    -fx-background-color: linear-gradient(to right, #d4af37, #f0c85c);
+    -fx-background-radius: 14 14 0 0;
+}
+
+.bidder-table .column-header,
+.bidder-table .filler {
+    -fx-background-color: transparent;
+    -fx-size: 42;
+    -fx-border-color: transparent rgba(6,28,37,0.18) transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.bidder-table .column-header .label {
+    -fx-text-fill: #08252d;
+    -fx-font-size: 13;
+    -fx-font-weight: 800;
+}
+
+.bidder-table .table-row-cell {
+    -fx-background-color: #082433;
+    -fx-border-color: transparent;
+}
+
+.bidder-table .table-row-cell:odd {
+    -fx-background-color: #0b2d3f;
+}
+
+.bidder-table .table-row-cell:empty {
+    -fx-background-color: #061c25;
+}
+
+.bidder-table .table-cell {
+    -fx-text-fill: #f8fafc;
+    -fx-font-size: 14;
+    -fx-padding: 0 14 0 14;
+    -fx-border-color: transparent rgba(226,232,240,0.12) rgba(226,232,240,0.08) transparent;
+    -fx-border-width: 0 1 1 0;
+}
+
+.bidder-table .table-row-cell:empty .table-cell {
+    -fx-border-color: transparent;
+}
+
+.bidder-table .table-row-cell:hover {
+    -fx-background-color: #12415a;
+}
+
+.bidder-table .table-row-cell:selected {
+    -fx-background-color: #d4af37;
+}
+
+.bidder-table .table-row-cell:selected .table-cell {
+    -fx-text-fill: #062f2d;
+    -fx-font-weight: 800;
+}
+
+.bidder-table .status-open {
+    -fx-text-fill: #6ee7b7;
+    -fx-font-weight: 800;
+}
+
+.bidder-table .status-finished {
+    -fx-text-fill: #fbbf24;
+    -fx-font-weight: 800;
+}
+
+.bidder-table .status-muted {
+    -fx-text-fill: #cbd5e1;
+    -fx-font-weight: 700;
+}

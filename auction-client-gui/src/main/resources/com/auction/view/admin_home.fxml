@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane prefHeight="700.0" prefWidth="1200.0" style="-fx-background-color: linear-gradient(to bottom right, #031c1f, #08313a);" stylesheets="@../style/seller.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.AdminHomeController">
+
+    <top>
+        <VBox spacing="16.0" style="-fx-padding: 22 32 8 32;" BorderPane.alignment="CENTER_LEFT">
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <Label style="-fx-text-fill: #f5d76e; -fx-font-weight: 900;" text="Admin Dashboard">
+                  <font>
+                     <Font size="18.0" />
+                  </font>
+                  <HBox.margin>
+                     <Insets top="10.0" />
+                  </HBox.margin></Label>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="welcomeLabel" style="-fx-text-fill: #cde8e6; -fx-font-size: 14px; -fx-font-weight: 700;" text="Welcome Admin" />
+                </HBox>
+
+                <Label style="-fx-text-fill: #9ec9c5; -fx-font-size: 13px;" />
+
+                <HBox spacing="12.0" style="-fx-background-color: rgba(255,255,255,0.04); -fx-background-radius: 14; -fx-padding: 14 16 14 16; -fx-border-color: rgba(212,175,55,0.18); -fx-border-radius: 14;">
+                    <children>
+                        <Button onAction="#handleDeleteFinishedProduct" prefWidth="190.0" style="-fx-font-weight: bold; -fx-background-color: #c73b10; -fx-text-fill: white; -fx-background-radius: 10;" text="Xoá sản phẩm" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button onAction="#handleRefresh" prefWidth="110.0" style="-fx-font-weight: bold; -fx-background-color: #4dd4a5; -fx-text-fill: #06211f; -fx-background-radius: 10;" text="Tải lại" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox style="-fx-padding: 10 32 10 32;">
+            <TableView fx:id="productTable" styleClass="bidder-table" BorderPane.alignment="CENTER">
+                <BorderPane.margin>
+                    <Insets bottom="20.0" left="0.0" right="0.0" top="0.0" />
+                </BorderPane.margin>
+
+                <columns>
+                    <TableColumn fx:id="idColumn" prefWidth="70.0" text="ID" />
+                    <TableColumn fx:id="nameColumn" prefWidth="280.0" text="Tên sản phẩm" />
+                    <TableColumn fx:id="startPriceColumn" prefWidth="180.0" text="Giá khởi điểm" />
+                    <TableColumn fx:id="currentPriceColumn" prefWidth="180.0" text="Giá hiện tại" />
+                    <TableColumn fx:id="statusColumn" prefWidth="160.0" text="Trạng thái" />
+                    <TableColumn fx:id="timeLeftColumn" prefWidth="160.0" text="Thời gian" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 32 24 32;" BorderPane.alignment="CENTER_RIGHT">
+            <children>
+                <Button onAction="#handleLogout" prefWidth="150.0" style="-fx-background-color: #b71c1c; -fx-font-weight: bold; -fx-text-fill: white; -fx-background-radius: 10;" text="Đăng xuất" />
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>
