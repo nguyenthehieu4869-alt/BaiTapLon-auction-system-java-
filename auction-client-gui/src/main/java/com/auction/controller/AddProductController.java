@@ -158,7 +158,7 @@ public class AddProductController {
 
         if (imagePath == null || imagePath.isBlank()) {
             productImagePreview.setImage(null);
-            imageStatusLabel.setText("Chua tai anh. Ban co the bo qua muc nay.");
+            imageStatusLabel.setText("Tải ảnh lên ở đây");
             imagePlaceholderLabel.setVisible(true);
             return;
         }

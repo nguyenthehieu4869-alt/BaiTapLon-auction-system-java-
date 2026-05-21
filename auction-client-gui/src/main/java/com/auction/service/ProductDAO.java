@@ -163,13 +163,17 @@ public class ProductDAO {
     public boolean deleteProduct(int productId) {
         String sql = "UPDATE products SET status = 'DELETED' WHERE id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return false;
+            }
 
-            stmt.setInt(1, productId);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, productId);
 
-            int rows = stmt.executeUpdate();
-            return rows > 0;
+                int rows = stmt.executeUpdate();
+                return rows > 0;
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -222,14 +226,18 @@ public class ProductDAO {
     public boolean closeAuction(int productId) {
         String sql = "UPDATE products SET status = ? WHERE id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                return false;
+            }
 
-            stmt.setString(1, "CLOSED");
-            stmt.setInt(2, productId);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, "CLOSED");
+                stmt.setInt(2, productId);
 
-            int rows = stmt.executeUpdate();
-            return rows > 0;
+                int rows = stmt.executeUpdate();
+                return rows > 0;
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();

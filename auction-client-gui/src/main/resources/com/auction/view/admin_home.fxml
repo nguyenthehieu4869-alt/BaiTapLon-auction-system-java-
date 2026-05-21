@@ -5,28 +5,28 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="700.0" prefWidth="1200.0" style="-fx-background-color: linear-gradient(to bottom right, #031c1f, #08313a);" stylesheets="@../style/seller.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.SellerHomeController">
+<BorderPane prefHeight="700.0" prefWidth="1200.0" style="-fx-background-color: linear-gradient(to bottom right, #031c1f, #08313a);" stylesheets="@../style/seller.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.AdminHomeController">
 
     <top>
         <VBox spacing="16.0" style="-fx-padding: 22 32 8 32;" BorderPane.alignment="CENTER_LEFT">
             <children>
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
-                    <Label style="-fx-text-fill: #f5d76e; -fx-font-weight: 900;" text="Seller Dashboard">
+                    <Label style="-fx-text-fill: #f5d76e; -fx-font-weight: 900;" text="Admin Dashboard">
                   <font>
-                     <Font size="14.0" />
-                  </font></Label>
+                     <Font size="18.0" />
+                  </font>
+                  <HBox.margin>
+                     <Insets top="10.0" />
+                  </HBox.margin></Label>
                     <Region HBox.hgrow="ALWAYS" />
-                    <Label fx:id="welcomeLabel" style="-fx-text-fill: #cde8e6; -fx-font-size: 14px; -fx-font-weight: 700;" text="Welcome Seller" />
+                    <Label fx:id="welcomeLabel" style="-fx-text-fill: #cde8e6; -fx-font-size: 14px; -fx-font-weight: 700;" text="Welcome Admin" />
                 </HBox>
 
                 <Label style="-fx-text-fill: #9ec9c5; -fx-font-size: 13px;" />
 
                 <HBox spacing="12.0" style="-fx-background-color: rgba(255,255,255,0.04); -fx-background-radius: 14; -fx-padding: 14 16 14 16; -fx-border-color: rgba(212,175,55,0.18); -fx-border-radius: 14;">
                     <children>
-                        <Button onAction="#handleAddProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #1bbf7a; -fx-text-fill: white; -fx-background-radius: 10;" text="Thêm sản phẩm" />
-                        <Button onAction="#handleEditProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #2f81f7; -fx-text-fill: white; -fx-background-radius: 10;" text="Edit " />
-                        <Button onAction="#handleDeleteProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #f97316; -fx-text-fill: white; -fx-background-radius: 10;" text="Xoá sản phẩm" />
-                        <Button onAction="#handleCloseAuction" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37; -fx-text-fill: #07211f; -fx-background-radius: 10;" text="Đóng phiên" />
+                        <Button onAction="#handleDeleteFinishedProduct" prefWidth="190.0" style="-fx-font-weight: bold; -fx-background-color: #c73b10; -fx-text-fill: white; -fx-background-radius: 10;" text="Xoá sản phẩm" />
                         <Region HBox.hgrow="ALWAYS" />
                         <Button onAction="#handleRefresh" prefWidth="110.0" style="-fx-font-weight: bold; -fx-background-color: #4dd4a5; -fx-text-fill: #06211f; -fx-background-radius: 10;" text="Tải lại" />
                     </children>

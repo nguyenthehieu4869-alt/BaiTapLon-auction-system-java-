@@ -1,30 +1,33 @@
 package com.auction.controller;
 
+import com.auction.model.Product;
+import com.auction.service.BidDAO;
+import com.auction.service.ProductDAO;
 import com.auction.util.AlertUtil;
+import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.stage.Stage;
-import com.auction.model.Product;
-import com.auction.service.BidDAO;
-import com.auction.service.ProductDAO;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.TableCell;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.beans.property.SimpleStringProperty;
-import java.time.LocalDateTime;
+import javafx.stage.Stage;
 
-import java.io.IOException;
+import java.time.LocalDateTime;
 
 public class HomeController {
     @FXML
     private Label welcomeLabel;
+
+    @FXML
+    private Label openingNoticeLabel;
 
     @FXML
     private Label emptyStateLabel;
@@ -39,9 +42,7 @@ public class HomeController {
     @FXML
     private void handleLogout() {
         try {
-            Parent root = FXMLLoader.load(
-                    getClass().getResource("/com/auction/view/login.fxml")
-            );
+            Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();
 
             Stage stage = (Stage) welcomeLabel.getScene().getWindow();
             stage.setMaximized(false);
@@ -145,7 +146,7 @@ public class HomeController {
 
         ProductDAO productDAO = new ProductDAO();
         productTable.setItems(productDAO.getAllProducts());
-        updateEmptyStateMessage();
+        updateDashboardMessages();
         productTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedProduct) -> {
 
         });
@@ -157,7 +158,33 @@ public class HomeController {
     private void handleRefresh() {
         ProductDAO productDAO = new ProductDAO();
         productTable.setItems(productDAO.getAllProducts());
-        updateEmptyStateMessage();
+        updateDashboardMessages();
+    }
+
+    @FXML
+    private void handleDeleteFinishedProduct() {
+        Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
+
+        if (selectedProduct == null) {
+            AlertUtil.showError("Vui lòng chọn sản phẩm đã kết thúc trước");
+            return;
+        }
+
+        if (!isFinishedProduct(selectedProduct)) {
+            AlertUtil.showWarning("Chỉ có thể xoá sản phẩm đã FINISHED");
+            return;
+        }
+
+        if (AlertUtil.showConfirm("Xác nhận xoá", "Bạn có muốn xoá sản phẩm đã FINISHED: " + selectedProduct.getName() + "?")) {
+            boolean success = new ProductDAO().deleteProduct(selectedProduct.getId());
+
+            if (success) {
+                AlertUtil.showInfo("Xoá sản phẩm thành công");
+                handleRefresh();
+            } else {
+                AlertUtil.showError("Xoá sản phẩm thất bại");
+            }
+        }
     }
 
     @FXML
@@ -170,7 +197,7 @@ public class HomeController {
         }
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/view/ProductDetail.fxml"));
+            FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/ProductDetail.fxml");
             Parent root = loader.load();
 
             ProductDetailController controller = loader.getController();
@@ -184,7 +211,7 @@ public class HomeController {
             stage.setMaximized(true);
             stage.show();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.showError("Không thể mở trang chi tiết sản phẩm");
         }
@@ -230,7 +257,7 @@ public class HomeController {
         countdownTimeline = new Timeline(
                 new KeyFrame(javafx.util.Duration.seconds(1), event -> {
                     productTable.refresh();
-                    updateEmptyStateMessage();
+                    updateDashboardMessages();
                 })
         );
 
@@ -238,16 +265,43 @@ public class HomeController {
         countdownTimeline.play();
     }
 
-    private void updateEmptyStateMessage() {
-        if (emptyStateLabel == null || productTable == null) {
+    private void updateDashboardMessages() {
+        if (productTable == null) {
             return;
         }
 
-        boolean hasAvailableProducts = productTable.getItems() != null
-                && productTable.getItems().stream().anyMatch(this::isAuctionAvailable);
+        long availableProductCount = productTable.getItems() == null
+                ? 0
+                : productTable.getItems().stream().filter(this::isAuctionAvailable).count();
 
-        emptyStateLabel.setVisible(!hasAvailableProducts);
-        emptyStateLabel.setManaged(!hasAvailableProducts);
+        updateOpeningNotice(availableProductCount);
+        updateEmptyStateMessage(availableProductCount);
+    }
+
+    private void updateOpeningNotice(long availableProductCount) {
+        if (openingNoticeLabel == null) {
+            return;
+        }
+
+        openingNoticeLabel.setText("Quy định: Nếu có bidder đặt giá trong vòng 15 giây cuối, phiên đó sẽ gia hạn thêm 15 giây");
+        openingNoticeLabel.setVisible(true);
+        openingNoticeLabel.setManaged(true);
+    }
+
+    private void updateEmptyStateMessage(long availableProductCount) {
+        if (emptyStateLabel == null) {
+            return;
+        }
+
+        boolean hasAvailableProducts = availableProductCount > 0;
+        if (hasAvailableProducts) {
+            emptyStateLabel.setText("Có " + availableProductCount + " sản phẩm đang đấu giá, vào đặt giá ngay!");
+        } else {
+            emptyStateLabel.setText("Hiện tại chưa có sản phẩm đấu giá khả dụng.");
+        }
+
+        emptyStateLabel.setVisible(true);
+        emptyStateLabel.setManaged(true);
     }
 
     private boolean isAuctionAvailable(Product product) {
@@ -260,7 +314,13 @@ public class HomeController {
         }
 
         String status = product.getStatus();
-        return status != null && !status.equalsIgnoreCase("DELETED") && !status.equalsIgnoreCase("CLOSED");
+        return status != null
+                && !status.equalsIgnoreCase("DELETED")
+                && !status.equalsIgnoreCase("CLOSED");
+    }
+
+    private boolean isFinishedProduct(Product product) {
+        return product != null && product.getEndTime() != null && !product.getEndTime().isAfter(LocalDateTime.now());
     }
 }
 

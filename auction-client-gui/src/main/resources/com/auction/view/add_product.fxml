@@ -1,25 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 
-<BorderPane prefHeight="700.0" prefWidth="700.0" style="-fx-background-color: linear-gradient(to bottom right, #012f2d, #003c3a 58%, #0a5a52);" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.AddProductController">
+<BorderPane prefHeight="700.0" prefWidth="700.0" style="-fx-background-color: linear-gradient(to bottom right, #012f2d, #003c3a 58%, #0a5a52);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.AddProductController">
 
     <top>
         <VBox spacing="8.0" style="-fx-padding: 28 36 6 36;">
             <children>
-                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 28px; -fx-font-weight: bold; -fx-font-style: italic;" text="ADD PRODUCT" />
+                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 28px; -fx-font-weight: bold; -fx-font-style: italic;" text="Thêm sản phẩm" />
             </children>
         </VBox>
     </top>
@@ -40,10 +31,10 @@
                             </columnConstraints>
 
                             <children>
-                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Name" />
+                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Tên" />
                                 <TextField fx:id="nameField" prefHeight="42.0" promptText="Nhập tên sản phẩm" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47; -fx-font-weight: bold;" GridPane.columnIndex="1" />
 
-                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Description" GridPane.rowIndex="1">
+                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Mô tả" GridPane.rowIndex="1">
                            <padding>
                               <Insets bottom="250.0" />
                            </padding></Label>
@@ -60,7 +51,7 @@
                                                         <StackPane prefHeight="120.0" prefWidth="170.0" style="-fx-background-color: rgba(248, 245, 234, 0.08);                                                                           -fx-background-radius: 14;                                                                           -fx-border-color: #d4af37;                                                                           -fx-border-radius: 14;                                                                           -fx-border-width: 1;">
                                                             <children>
                                                                 <ImageView fx:id="productImagePreview" fitHeight="110.0" fitWidth="160.0" pickOnBounds="true" preserveRatio="true" />
-                                                                <Label fx:id="imagePlaceholderLabel" style="-fx-text-fill: #f6e7b0; -fx-font-size: 12px;" text="Preview ảnh" />
+                                                                <Label fx:id="imagePlaceholderLabel" style="-fx-text-fill: #f6e7b0; -fx-font-size: 12px;" />
                                                             </children>
                                                         </StackPane>
 
@@ -83,11 +74,11 @@
                                     </children>
                                 </VBox>
 
-                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Start Price" GridPane.rowIndex="2" />
+                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Giá khởi điểm" GridPane.rowIndex="2" />
                                 <TextField fx:id="startPriceField" prefHeight="42.0" promptText="Nhập giá khởi điểm" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Duration (minutes)" GridPane.rowIndex="3" />
-                                <TextField fx:id="durationMinutesField" prefHeight="42.0" promptText="Nhập thời lượng đấu giá" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Thời gian" GridPane.rowIndex="3" />
+                                <TextField fx:id="durationMinutesField" prefHeight="42.0" promptText="Nhập thời lượng đấu giá(phút)" style="-fx-background-color: #003c3a; -fx-background-radius: 12; -fx-border-color: #d4af37; -fx-border-radius: 12; -fx-border-width: 1; -fx-text-fill: #d4af37; -fx-prompt-text-fill: #7a6e47; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                             </children>
                      <rowConstraints>
                         <RowConstraints />
@@ -99,8 +90,8 @@
 
                         <HBox alignment="CENTER_RIGHT" spacing="14.0">
                             <children>
-                                <Button onAction="#handleCancel" prefHeight="42.0" prefWidth="130.0" style="-fx-background-color: transparent;                                                -fx-text-fill: #d4af37;                                                -fx-font-weight: bold;                                                -fx-border-color: #d4af37;                                                -fx-border-radius: 12;                                                -fx-border-width: 1.2;                                                -fx-background-radius: 12;" text="Cancel" />
-                                <Button onAction="#handleSave" prefHeight="42.0" prefWidth="130.0" style="-fx-background-color: #d4af37;                                                -fx-text-fill: #002c2a;                                                -fx-font-weight: bold;                                                -fx-background-radius: 12;" text="Save" />
+                                <Button onAction="#handleCancel" prefHeight="42.0" prefWidth="130.0" style="-fx-background-color: transparent;                                                -fx-text-fill: #d4af37;                                                -fx-font-weight: bold;                                                -fx-border-color: #d4af37;                                                -fx-border-radius: 12;                                                -fx-border-width: 1.2;                                                -fx-background-radius: 12;" text="Huỷ" />
+                                <Button onAction="#handleSave" prefHeight="42.0" prefWidth="130.0" style="-fx-background-color: #d4af37;                                                -fx-text-fill: #002c2a;                                                -fx-font-weight: bold;                                                -fx-background-radius: 12;" text="Lưu" />
                             </children>
                         </HBox>
                     </children>

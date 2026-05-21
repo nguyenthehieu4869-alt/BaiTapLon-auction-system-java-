@@ -18,6 +18,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.Button;
 import com.auction.util.AlertUtil;
+import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
 
 import java.io.File;
@@ -106,9 +107,7 @@ public class ProductDetailController {
     @FXML
     private void handleBack(){
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/com/auction/view/home.fxml")
-            );
+            FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/home.fxml");
 
             Parent root=loader.load();
 

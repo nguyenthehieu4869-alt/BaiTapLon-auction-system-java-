@@ -20,6 +20,7 @@ import java.text.DecimalFormat;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import com.auction.util.AlertUtil;
+import com.auction.util.FxmlUtil;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -184,7 +185,7 @@ public class SellerHomeController {
     @FXML
     private void handleAddProduct() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/view/add_product.fxml"));
+            FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/add_product.fxml");
             Parent root = loader.load();
 
             AddProductController controller = loader.getController();
@@ -198,7 +199,7 @@ public class SellerHomeController {
 
             loadProducts();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.showError("Không thể mở form thêm sản phẩm");
         }
@@ -235,8 +236,7 @@ public class SellerHomeController {
         }
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().
-                    getResource("/com/auction/view/edit_product.fxml"));
+            FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/edit_product.fxml");
 
             Parent root = loader.load();
 
@@ -251,7 +251,7 @@ public class SellerHomeController {
 
             loadProducts();
 
-        }catch (IOException e){
+        }catch (Exception e){
             e.printStackTrace();
             AlertUtil.showError("Không thể mở trang edit sản phẩm !");
         }
@@ -287,7 +287,7 @@ public class SellerHomeController {
     @FXML
     private void handleLogout(ActionEvent event) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/com/auction/view/login.fxml"));
+            Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setMaximized(false);
@@ -295,7 +295,7 @@ public class SellerHomeController {
             stage.setMaximized(true);
             stage.show();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.showError("Không thể quay về màn hình đăng nhập !");
         }

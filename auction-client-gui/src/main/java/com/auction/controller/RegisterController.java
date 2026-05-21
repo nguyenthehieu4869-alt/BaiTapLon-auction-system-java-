@@ -1,6 +1,7 @@
 package com.auction.controller;
 
 import com.auction.service.UserDAO;
+import com.auction.util.FxmlUtil;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -70,7 +71,7 @@ public class RegisterController {
 
     private void switchToLogin() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/auction/view/login.fxml"));
+            FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml");
             Parent root = loader.load();
 
             Stage stage = (Stage) usernameField.getScene().getWindow();

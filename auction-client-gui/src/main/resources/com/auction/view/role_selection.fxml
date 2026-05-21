@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="700.0" prefWidth="1200.0" style="-fx-background-color: #003c3a;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.RoleSelectionController">
+<AnchorPane prefHeight="700.0" prefWidth="1200.0" style="-fx-background-color: #003c3a;" xmlns="http://javafx.com/javafx/21.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.RoleSelectionController">
    <children>
       <VBox alignment="CENTER" layoutX="172.0" layoutY="72.0" prefHeight="211.0" prefWidth="257.0" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -26,9 +26,9 @@
                   <Insets left="5.0" top="20.0" />
                </VBox.margin>
             </Label>
-            <Button mnemonicParsing="false" onAction="#handleBidder" prefHeight="25.0" prefWidth="120.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37;" text="Bidder" textFill="#24250d" />
-            <Button mnemonicParsing="false" onAction="#handleSeller" prefHeight="25.0" prefWidth="120.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37;" text="Seller" />
-            <Button mnemonicParsing="false" onAction="#handleAdmin" prefHeight="25.0" prefWidth="120.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37;" text="Admin" />
+            <Button fx:id="bidderButton" mnemonicParsing="false" onAction="#handleBidder" prefHeight="25.0" prefWidth="120.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37;" text="Bidder" textFill="#24250d" />
+            <Button fx:id="sellerButton" mnemonicParsing="false" onAction="#handleSeller" prefHeight="25.0" prefWidth="120.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37;" text="Seller" />
+            <Button fx:id="adminButton" mnemonicParsing="false" onAction="#handleAdmin" prefHeight="25.0" prefWidth="120.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37;" text="Admin" />
          </children>
       </VBox>
    </children>
