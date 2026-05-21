@@ -7,6 +7,7 @@ import org.example.network.protocol.Message;
 import org.example.network.protocol.MessageType;
 import org.example.network.protocol.Protocol;
 import org.example.server.ServerManager;
+import org.example.util.Logger;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -37,7 +38,7 @@ public class MessageHandler {
                 break;
 
             default:
-                System.out.println("❌ Không hiểu message");
+                Logger.error("Không hiểu message");
         }
     }
 
@@ -49,27 +50,17 @@ public class MessageHandler {
         String username = (String) data.get("username");
         String password = (String) data.get("password");
 
-        System.out.println("👤 Login: " + username);
+        Logger.info("Login: " + username);
 
         UserDAO dao = new UserDAO();
 
         boolean result = dao.login(username, password);
 
-        Message response;
-
-        if (result) {
-            response = new Message(
-                    MessageType.LOGIN_SUCCESS,
-                    "Login thành công",
-                    true
-            );
-        } else {
-            response = new Message(
-                    MessageType.LOGIN_FAIL,
-                    "Sai tài khoản hoặc mật khẩu",
-                    false
-            );
-        }
+        Message response = new Message(
+                result ? MessageType.LOGIN_SUCCESS : MessageType.LOGIN_FAIL,
+                result ? "Login thành công" : "Sai tài khoản hoặc mật khẩu",
+                result
+        );
 
         out.println(Protocol.encode(response));
     }
@@ -95,10 +86,9 @@ public class MessageHandler {
 
         Map data = (Map) msg.getData();
 
-        // ⚠ Gson trả về Double → phải convert
-        int userId = Double.valueOf(data.get("userId").toString()).intValue();
-        int productId = Double.valueOf(data.get("productId").toString()).intValue();
-        double amount = Double.valueOf(data.get("amount").toString());
+        int userId = ((Number) data.get("userId")).intValue();
+        int productId = ((Number) data.get("productId")).intValue();
+        double amount = ((Number) data.get("amount")).doubleValue();
 
         BidDAO dao = new BidDAO();
 
@@ -106,12 +96,12 @@ public class MessageHandler {
 
         if (result) {
 
-            System.out.println("✅ Bid thành công: " + amount);
+            Logger.info("Bid thành công: " + amount);
 
-            // ✅ gửi cho tất cả client (REALTIME)
+            // ✅ gửi realtime cho tất cả client
             Message broadcastMsg = new Message(
                     MessageType.BID_UPDATE,
-                    data,
+                    data,   // giữ nguyên data (OK)
                     true
             );
 
@@ -119,8 +109,10 @@ public class MessageHandler {
 
         } else {
 
+            Logger.error("Bid thất bại");
+
             Message response = new Message(
-                    MessageType.BID_SUCCESS,
+                    MessageType.BID_FAIL,   // ✅ SỬA (trước bạn dùng BID_SUCCESS sai logic)
                     "Đặt giá thất bại",
                     false
             );
