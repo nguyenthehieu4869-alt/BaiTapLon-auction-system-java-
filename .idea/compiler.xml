@@ -6,8 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="ten-project-cua-ban" />
         <module name="BaiTapLon-auction-system-java--Fx-Networkcode" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="auction-client" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
