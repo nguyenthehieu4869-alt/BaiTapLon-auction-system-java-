@@ -12,6 +12,10 @@ public class Protocol {
     public static Message decode(String json) {
         return gson.fromJson(json, Message.class);
     }
+
+    public static Gson gson() {
+        return gson;
+    }
 }
 
 

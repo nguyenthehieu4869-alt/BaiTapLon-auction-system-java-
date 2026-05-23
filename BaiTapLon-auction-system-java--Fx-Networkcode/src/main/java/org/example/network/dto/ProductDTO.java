@@ -1,6 +1,6 @@
-package org.example.model;
+package org.example.network.dto;
 
-public class Product {
+public class ProductDTO {
     private int id;
     private String name;
     private String description;
@@ -12,9 +12,9 @@ public class Product {
     private String endTime;
     private String sellerUsername;
 
-    public Product(int id, String name, String description, String imagePath,
-                   double startPrice, double currentPrice, String status,
-                   String startTime, String endTime, String sellerUsername) {
+    public ProductDTO(int id, String name, String description, String imagePath,
+                      double startPrice, double currentPrice, String status,
+                      String startTime, String endTime, String sellerUsername) {
         this.id = id;
         this.name = name;
         this.description = description;

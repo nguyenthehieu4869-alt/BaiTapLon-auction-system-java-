@@ -1,22 +1,33 @@
 package org.example.network.protocol;
-public enum MessageType {
 
-    // Auth
+public enum MessageType {
     LOGIN,
-    REGISTER,
     LOGIN_SUCCESS,
-    REGISTER_SUCCESS,
     LOGIN_FAIL,
+
+    REGISTER,
+    REGISTER_SUCCESS,
     REGISTER_FAIL,
 
-    // Product
     GET_PRODUCTS,
+    GET_PRODUCTS_BY_SELLER,
     PRODUCT_LIST,
 
-    // Bid
+    ADD_PRODUCT,
+    EDIT_PRODUCT,
+    DELETE_PRODUCT,
+    CLOSE_AUCTION,
+
     PLACE_BID,
     BID_SUCCESS,
     BID_FAIL,
-    BID_UPDATE
-}
+    BID_UPDATE,
 
+    GET_BID_HISTORY,
+    BID_HISTORY,
+
+    GET_WINNER,
+    WINNER_RESULT,
+
+    ERROR
+}

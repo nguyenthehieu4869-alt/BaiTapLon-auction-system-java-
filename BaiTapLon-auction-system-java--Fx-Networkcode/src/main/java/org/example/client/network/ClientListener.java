@@ -32,7 +32,7 @@ public class ClientListener extends Thread {
                 if (msg.getType() == MessageType.BID_UPDATE) {
                     Map data = (Map) msg.getData();
 
-                    System.out.println("🔥 Giá mới: " + data.get("amount"));
+                    System.out.println("🔥 Giá mới: " + data.get("currentPrice"));
                 }
             }
         } catch (Exception e) {

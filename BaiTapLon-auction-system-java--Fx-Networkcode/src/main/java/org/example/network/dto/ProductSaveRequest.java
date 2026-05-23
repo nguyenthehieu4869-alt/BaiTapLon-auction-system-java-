@@ -1,29 +1,25 @@
-package org.example.model;
+package org.example.network.dto;
 
-public class Product {
+public class ProductSaveRequest {
     private int id;
     private String name;
     private String description;
     private String imagePath;
     private double startPrice;
-    private double currentPrice;
     private String status;
-    private String startTime;
-    private String endTime;
+    private int durationMinutes;
     private String sellerUsername;
 
-    public Product(int id, String name, String description, String imagePath,
-                   double startPrice, double currentPrice, String status,
-                   String startTime, String endTime, String sellerUsername) {
+    public ProductSaveRequest(int id, String name, String description, String imagePath,
+                              double startPrice, String status, int durationMinutes,
+                              String sellerUsername) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.imagePath = imagePath;
         this.startPrice = startPrice;
-        this.currentPrice = currentPrice;
         this.status = status;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.durationMinutes = durationMinutes;
         this.sellerUsername = sellerUsername;
     }
 
@@ -32,9 +28,7 @@ public class Product {
     public String getDescription() { return description; }
     public String getImagePath() { return imagePath; }
     public double getStartPrice() { return startPrice; }
-    public double getCurrentPrice() { return currentPrice; }
     public String getStatus() { return status; }
-    public String getStartTime() { return startTime; }
-    public String getEndTime() { return endTime; }
+    public int getDurationMinutes() { return durationMinutes; }
     public String getSellerUsername() { return sellerUsername; }
 }

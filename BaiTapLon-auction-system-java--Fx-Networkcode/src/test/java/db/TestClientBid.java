@@ -1,43 +1,32 @@
+package db;
+
+import org.example.network.dto.BidRequest;
 import org.example.network.protocol.Message;
 import org.example.network.protocol.MessageType;
 import org.example.network.protocol.Protocol;
 
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TestClientBid {
-
     public static void main(String[] args) {
-
         try {
-            // ✅ connect tới server (đổi IP nếu chạy khác máy)
             Socket socket = new Socket("localhost", 9999);
-
-            // ✅ tạo luồng gửi dữ liệu
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-            // ✅ tạo data BID
-            Map<String, Object> data = new HashMap<>();
-            data.put("userId", 1);
-            data.put("productId", 1);
-            data.put("amount", 5000);
+            BidRequest request = new BidRequest(1, "bidder1", 16000000);
 
-            // ✅ tạo message
             Message msg = new Message(
                     MessageType.PLACE_BID,
-                    data,
+                    request,
                     true
             );
 
-            // ✅ encode → gửi JSON
             String json = Protocol.encode(msg);
-
-            System.out.println("📤 Gửi lên server:");
             System.out.println(json);
 
-            out.println(json); // gửi đi
+            out.println(json);
+            socket.close();
 
         } catch (Exception e) {
             e.printStackTrace();

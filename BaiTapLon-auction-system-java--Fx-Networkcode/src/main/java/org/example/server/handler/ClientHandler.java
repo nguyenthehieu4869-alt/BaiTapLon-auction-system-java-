@@ -21,6 +21,8 @@ public class ClientHandler extends Thread {
             out = new PrintWriter(socket.getOutputStream(), true);
 
             ServerManager.addClient(this);
+            System.out.println("Current clients: " + ServerManager.getClientCount());
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -42,10 +44,42 @@ public class ClientHandler extends Thread {
 
         } catch (Exception e) {
             System.out.println("Client disconnected");
+        }finally {
+            ServerManager.removeClient(this);
+            closeQuietly();
+            System.out.println("Current clients: " + ServerManager.getClientCount());
         }
     }
 
-    public void send(String msg) {
+    public boolean send(String msg) {
+        if (out == null) {
+            return false;
+        }
+
         out.println(msg);
+        return !out.checkError();
+    }
+
+    private void closeQuietly() {
+        try {
+            if (in != null) {
+                in.close();
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            if (out != null) {
+                out.close();
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            if (socket != null) {
+                socket.close();
+            }
+        } catch (Exception ignored) {
+        }
     }
 }

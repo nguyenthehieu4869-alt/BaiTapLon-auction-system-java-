@@ -2,20 +2,33 @@ package org.example.server;
 
 import org.example.server.handler.ClientHandler;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ServerManager {
-
-    public static List<ClientHandler> clients = new ArrayList<>();
+    private static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
     public static void addClient(ClientHandler client) {
-        clients.add(client);
+        if (client != null) {
+            clients.add(client);
+        }
+    }
+
+    public static void removeClient(ClientHandler client) {
+        clients.remove(client);
     }
 
     public static void broadcast(String msg) {
-        for (ClientHandler c : clients) {
-            c.send(msg);
+        for (ClientHandler client : clients) {
+            boolean sent = client.send(msg);
+
+            if (!sent) {
+                removeClient(client);
+            }
         }
+    }
+
+    public static int getClientCount() {
+        return clients.size();
     }
 }
