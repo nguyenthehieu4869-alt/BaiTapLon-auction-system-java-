@@ -1,6 +1,6 @@
 package com.auction.controller;
 
-import com.auction.service.UserDAO;
+import com.auction.service.remote.RemoteUserService;
 import com.auction.util.AlertUtil;
 import com.auction.util.FxmlUtil;
 import javafx.fxml.FXML;
@@ -33,10 +33,11 @@ public class LoginController {
             return;
         }
 
-        UserDAO userDAO = new UserDAO();
+        RemoteUserService userService = new RemoteUserService();
+        RemoteUserService.AuthResult loginResult = userService.login(user, password);
 
-        if (!userDAO.checkLogin(user, password)) {
-            AlertUtil.showError("Sai tai khoan hoac mat khau");
+        if (!loginResult.isSuccess()) {
+            AlertUtil.showError(loginResult.getMessage());
             return;
         }
 

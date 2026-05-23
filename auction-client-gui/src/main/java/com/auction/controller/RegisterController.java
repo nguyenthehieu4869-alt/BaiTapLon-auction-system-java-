@@ -1,6 +1,6 @@
 package com.auction.controller;
 
-import com.auction.service.UserDAO;
+import com.auction.service.remote.RemoteUserService;
 import com.auction.util.FxmlUtil;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -52,15 +52,15 @@ public class RegisterController {
             return;
         }
 
-        UserDAO userDAO = new UserDAO();
+        RemoteUserService userService = new RemoteUserService();
 
-        boolean success = userDAO.register(username, email, password);
+        RemoteUserService.AuthResult registerResult = userService.registerAccount(username, email, password);
 
-        if (success) {
+        if (registerResult.isSuccess()) {
             AlertUtil.showInfo("Đăng ký thành công!");
             switchToLogin();
         } else {
-            AlertUtil.showError("Username hoặc email đã tồn tại!");
+            AlertUtil.showError(registerResult.getMessage());
         }
     }
 

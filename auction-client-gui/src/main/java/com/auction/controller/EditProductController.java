@@ -1,7 +1,7 @@
 package com.auction.controller;
 
 import com.auction.model.Product;
-import com.auction.service.ProductDAO;
+import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
@@ -41,7 +41,7 @@ public class EditProductController {
 
     private String selectedImagePath;
 
-    private final ProductDAO productDAO = new ProductDAO();
+    private final RemoteProductService productService = new RemoteProductService();
 
     @FXML
     private void initialize() {
@@ -120,7 +120,7 @@ public class EditProductController {
             return;
         }
 
-        boolean success = productDAO.updateProduct(
+        boolean success = productService.updateProduct(
                 product.getId(),
                 name,
                 description,

@@ -1,7 +1,7 @@
 package com.auction.controller;
 
 import com.auction.model.Product;
-import com.auction.service.ProductDAO;
+import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
 import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
@@ -9,7 +9,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -19,7 +18,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 
 public class AdminHomeController {
@@ -48,7 +46,7 @@ public class AdminHomeController {
     @FXML
     private TableColumn<Product, String> timeLeftColumn;
 
-    private final ProductDAO productDAO = new ProductDAO();
+    private final RemoteProductService productService = new RemoteProductService();
     private Timeline countdownTimeline;
 
     @FXML
@@ -91,7 +89,7 @@ public class AdminHomeController {
     }
 
     private void loadProducts() {
-        productTable.setItems(productDAO.getAllProducts());
+        productTable.setItems(productService.getAllProducts());
     }
 
     @FXML
@@ -104,7 +102,7 @@ public class AdminHomeController {
         Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
 
         if (selectedProduct == null) {
-            AlertUtil.showError("Vui lòng chọn sản phẩm đã FINISHED");
+            AlertUtil.showError("Vui lòng chỉ chọn sản phẩm đã FINISHED");
             return;
         }
 
@@ -114,7 +112,7 @@ public class AdminHomeController {
         }
 
         if (AlertUtil.showConfirm("Xác nhận xoá", "Bạn có muốn xoá sản phẩm: " + selectedProduct.getName() + "?")) {
-            if (productDAO.deleteProduct(selectedProduct.getId())) {
+            if (productService.deleteProduct(selectedProduct.getId())) {
                 AlertUtil.showInfo("Xoá sản phẩm thành công");
                 loadProducts();
             } else {

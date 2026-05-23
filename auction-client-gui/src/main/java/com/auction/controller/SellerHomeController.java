@@ -3,7 +3,7 @@ package com.auction.controller;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import com.auction.model.Product;
-import com.auction.service.ProductDAO;
+import com.auction.service.remote.RemoteProductService;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -14,7 +14,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 
 import javafx.stage.Modality;
@@ -58,7 +57,7 @@ public class SellerHomeController {
 
     private String username;
 
-    private final ProductDAO productDAO = new ProductDAO();
+    private final RemoteProductService productService = new RemoteProductService();
 
     private final DecimalFormat priceFormat = new DecimalFormat("#,### VND");
 
@@ -132,7 +131,7 @@ public class SellerHomeController {
             return;
         }
 
-        ObservableList<Product> products = productDAO.getProductsBySeller(username);
+        ObservableList<Product> products = productService.getProductsBySeller(username);
         productTable.setItems(products);
     }
 
@@ -215,7 +214,7 @@ public class SellerHomeController {
         }
 
         if (AlertUtil.showConfirm("Xác nhận xoá", "Bạn có muốn xoá: " + selectedProduct.getName() + "?")){
-            boolean success = productDAO.deleteProduct(selectedProduct.getId());
+            boolean success = productService.deleteProduct(selectedProduct.getId());
 
             if (success){
                 AlertUtil.showInfo("Xoá sản phẩm thành công !");
@@ -273,7 +272,7 @@ public class SellerHomeController {
 
         if (AlertUtil.showConfirm("Xác nhận đóng đấu giá",
                 "Bạn có chắc muốn đóng đấu giá sản phẩm: " + selectedProduct.getName() + "?")) {
-            boolean success = productDAO.closeAuction(selectedProduct.getId());
+            boolean success = productService.closeAuction(selectedProduct.getId());
 
             if (success) {
                 AlertUtil.showInfo("Đóng đấu giá thành công");

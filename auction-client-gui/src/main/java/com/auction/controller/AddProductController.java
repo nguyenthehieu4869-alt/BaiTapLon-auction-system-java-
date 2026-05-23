@@ -1,6 +1,6 @@
 package com.auction.controller;
 
-import com.auction.service.ProductDAO;
+import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -37,7 +37,7 @@ public class AddProductController {
     @FXML
     private Label imagePlaceholderLabel;
 
-    private final ProductDAO productDAO = new ProductDAO();
+    private final RemoteProductService productService = new RemoteProductService();
 
     private String sellerUsername;
 
@@ -128,7 +128,7 @@ public class AddProductController {
             return;
         }
 
-        boolean success = productDAO.addProduct(
+        boolean success = productService.addProduct(
                 name,
                 description,
                 startPrice,

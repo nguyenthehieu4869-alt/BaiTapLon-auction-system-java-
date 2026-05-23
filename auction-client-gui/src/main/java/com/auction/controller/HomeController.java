@@ -1,8 +1,9 @@
 package com.auction.controller;
 
 import com.auction.model.Product;
-import com.auction.service.BidDAO;
-import com.auction.service.ProductDAO;
+
+import com.auction.service.remote.RemoteBidService;
+import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
 import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
@@ -21,6 +22,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class HomeController {
     @FXML
@@ -75,6 +80,10 @@ public class HomeController {
     private TableColumn<Product, String> timeLeftColumn;
 
     private Timeline countdownTimeline;
+    private final RemoteProductService productService = new RemoteProductService();
+    private final RemoteBidService bidService = new RemoteBidService();
+    private final Map<Integer, String> leaderUsernameCache = new HashMap<>();
+    private final Set<Integer> leaderCacheLoaded = new HashSet<>();
 
     @FXML
     public void initialize() {
@@ -144,8 +153,7 @@ public class HomeController {
                 new SimpleStringProperty(formatTimeLeft(cellData.getValue()))
         );
 
-        ProductDAO productDAO = new ProductDAO();
-        productTable.setItems(productDAO.getAllProducts());
+        productTable.setItems(productService.getAllProducts());
         updateDashboardMessages();
         productTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedProduct) -> {
 
@@ -156,8 +164,9 @@ public class HomeController {
 
     @FXML
     private void handleRefresh() {
-        ProductDAO productDAO = new ProductDAO();
-        productTable.setItems(productDAO.getAllProducts());
+        leaderUsernameCache.clear();
+        leaderCacheLoaded.clear();
+        productTable.setItems(productService.getAllProducts());
         updateDashboardMessages();
     }
 
@@ -176,7 +185,7 @@ public class HomeController {
         }
 
         if (AlertUtil.showConfirm("Xác nhận xoá", "Bạn có muốn xoá sản phẩm đã FINISHED: " + selectedProduct.getName() + "?")) {
-            boolean success = new ProductDAO().deleteProduct(selectedProduct.getId());
+            boolean success = productService.deleteProduct(selectedProduct.getId());
 
             if (success) {
                 AlertUtil.showInfo("Xoá sản phẩm thành công");
@@ -239,7 +248,7 @@ public class HomeController {
     }
 
     private String getDisplayStatus(Product product) {
-        String leaderUsername = new BidDAO().getWinnerUsernameByProductId(product.getId());
+        String leaderUsername = getCachedLeaderUsername(product.getId());
 
         if (product.getEndTime() != null &&
                 !product.getEndTime().isAfter(LocalDateTime.now())) {
@@ -250,7 +259,16 @@ public class HomeController {
 
         return leaderUsername == null || leaderUsername.isBlank()
                 ? product.getStatus()
-                : "OPENING - Leader: " + leaderUsername;
+                : "OPENING - Current Leader: " + leaderUsername;
+    }
+
+    private String getCachedLeaderUsername(int productId) {
+        if (!leaderCacheLoaded.contains(productId)) {
+            leaderUsernameCache.put(productId, bidService.getWinnerUsernameByProductId(productId));
+            leaderCacheLoaded.add(productId);
+        }
+
+        return leaderUsernameCache.get(productId);
     }
 
     private void startCountdownTimer() {

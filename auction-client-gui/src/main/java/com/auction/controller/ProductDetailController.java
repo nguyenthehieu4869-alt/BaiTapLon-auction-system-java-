@@ -1,7 +1,6 @@
 package com.auction.controller;
 
 import com.auction.service.BidResult;
-import com.auction.service.BidService;
 import com.auction.model.Product;
 import javafx.fxml.*;
 import javafx.scene.*;
@@ -11,7 +10,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import com.auction.model.Bid;
-import com.auction.service.BidDAO;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -20,6 +18,7 @@ import javafx.scene.control.Button;
 import com.auction.util.AlertUtil;
 import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
+import com.auction.service.remote.RemoteBidService;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -64,9 +63,7 @@ public class ProductDetailController {
 
     private Product product;
 
-    private final BidService bidService = new BidService();
-
-    private final BidDAO bidDAO = new BidDAO();
+    private final RemoteBidService bidService = new RemoteBidService();
 
     private String username;
 
@@ -161,7 +158,7 @@ public class ProductDetailController {
         if (product == null) {
             return;
         }
-        bidHistoryTable.setItems(bidDAO.getBidsByProductId(product.getId()));
+        bidHistoryTable.setItems(bidService.getBidsByProductId(product.getId()));
     }
 
     private void updateBidControls() {
