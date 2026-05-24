@@ -24,12 +24,12 @@ public class LoginController {
         String password = passwordField.getText();
 
         if (user.isEmpty() || password.isEmpty()) {
-            AlertUtil.showError("Vui long nhap day du!");
+            AlertUtil.showError("Vui lòng nhập đầy đủ!");
             return;
         }
 
         if (password.length() < 6) {
-            AlertUtil.showError("Mat khau phai co it nhat 6 ky tu!");
+            AlertUtil.showError("Mật khẩu phải chứa ít nhất 6 kí tự!");
             return;
         }
 

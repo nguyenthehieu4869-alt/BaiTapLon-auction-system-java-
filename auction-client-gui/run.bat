@@ -2,7 +2,7 @@
 
 setlocal
 
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
-mvn -q javafx:run
+mvn -q -pl auction-client-gui -am javafx:run
 

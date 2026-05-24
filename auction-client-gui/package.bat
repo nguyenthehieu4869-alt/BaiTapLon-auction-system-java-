@@ -2,9 +2,9 @@
 
 setlocal
 
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
-mvn -q clean package
+mvn -q -pl auction-client-gui -am clean package
 
 if errorlevel 1 goto :error
 
@@ -15,7 +15,7 @@ echo Build completed.
 
 echo Run the app with:
 
-echo   mvn javafx:run
+echo   mvn -pl auction-client-gui -am javafx:run
 
 echo.
 

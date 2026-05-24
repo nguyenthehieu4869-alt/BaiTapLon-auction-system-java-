@@ -171,32 +171,6 @@ public class HomeController {
     }
 
     @FXML
-    private void handleDeleteFinishedProduct() {
-        Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
-
-        if (selectedProduct == null) {
-            AlertUtil.showError("Vui lòng chọn sản phẩm đã kết thúc trước");
-            return;
-        }
-
-        if (!isFinishedProduct(selectedProduct)) {
-            AlertUtil.showWarning("Chỉ có thể xoá sản phẩm đã FINISHED");
-            return;
-        }
-
-        if (AlertUtil.showConfirm("Xác nhận xoá", "Bạn có muốn xoá sản phẩm đã FINISHED: " + selectedProduct.getName() + "?")) {
-            boolean success = productService.deleteProduct(selectedProduct.getId());
-
-            if (success) {
-                AlertUtil.showInfo("Xoá sản phẩm thành công");
-                handleRefresh();
-            } else {
-                AlertUtil.showError("Xoá sản phẩm thất bại");
-            }
-        }
-    }
-
-    @FXML
     private void handleViewDetail() {
         Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
 
@@ -301,7 +275,7 @@ public class HomeController {
             return;
         }
 
-        openingNoticeLabel.setText("Quy định: Nếu có bidder đặt giá trong vòng 15 giây cuối, phiên đó sẽ gia hạn thêm 15 giây");
+        openingNoticeLabel.setText("Quy định: Nếu có bidder đặt giá trong vòng 15 giây cuối, phiên đấu giá sẽ tự động gia hạn thêm 15 giây.");
         openingNoticeLabel.setVisible(true);
         openingNoticeLabel.setManaged(true);
     }
@@ -313,7 +287,7 @@ public class HomeController {
 
         boolean hasAvailableProducts = availableProductCount > 0;
         if (hasAvailableProducts) {
-            emptyStateLabel.setText("Có " + availableProductCount + " sản phẩm đang đấu giá, vào đặt giá ngay!");
+            emptyStateLabel.setText("Có " + availableProductCount + " sản phẩm đang đấu giá,hãy vào đấu giá ngay!");
         } else {
             emptyStateLabel.setText("Hiện tại chưa có sản phẩm đấu giá khả dụng.");
         }
