@@ -16,7 +16,7 @@ public class AuctionApplication extends Application {
         stage.setResizable(true);
         stage.setMaximized(true);
         stage.setScene(scene);
-        stage.setTitle("He thong dau gia truc tuyen");
+        stage.setTitle("Hệ thống đấu giá trực tuyến");
         stage.show();
     }
 }

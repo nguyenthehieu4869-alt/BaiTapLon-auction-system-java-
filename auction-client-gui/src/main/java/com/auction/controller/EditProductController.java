@@ -4,7 +4,6 @@ import com.auction.model.Product;
 import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -26,9 +25,6 @@ public class EditProductController {
     private TextField startPriceField;
 
     @FXML
-    private ComboBox<String> statusComboBox;
-
-    @FXML
     private ImageView productImagePreview;
 
     @FXML
@@ -45,7 +41,6 @@ public class EditProductController {
 
     @FXML
     private void initialize() {
-        statusComboBox.getItems().addAll("OPEN", "CLOSED");
         updateImagePreview(null);
     }
 
@@ -55,7 +50,6 @@ public class EditProductController {
         nameField.setText(product.getName());
         descriptionArea.setText(product.getDescription());
         startPriceField.setText(String.valueOf(product.getStartPrice()));
-        statusComboBox.setValue(product.getStatus());
 
         selectedImagePath = product.getImagePath();
         updateImagePreview(selectedImagePath);
@@ -99,9 +93,8 @@ public class EditProductController {
         String name = nameField.getText().trim();
         String description = descriptionArea.getText().trim();
         String priceText = startPriceField.getText().trim();
-        String status = statusComboBox.getValue();
 
-        if (name.isEmpty() || description.isEmpty() || priceText.isEmpty() || status == null) {
+        if (name.isEmpty() || description.isEmpty() || priceText.isEmpty()) {
             AlertUtil.showError("Vui lòng nhập đầy đủ thông tin !");
             return;
         }
@@ -125,7 +118,7 @@ public class EditProductController {
                 name,
                 description,
                 startPrice,
-                status,
+                product.getStatus(),
                 selectedImagePath
         );
 

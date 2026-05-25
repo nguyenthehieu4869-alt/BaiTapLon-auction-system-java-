@@ -40,6 +40,11 @@ public class BidService {
                 return BidResult.failure("Phiên đấu giá đã kết thúc");
             }
 
+            if (isAuctionNotStarted(product.startTime)) {
+                conn.rollback();
+                return BidResult.failure("Phiên đấu giá chưa bắt đầu");
+            }
+
             if (bidPrice <= product.currentPrice) {
                 conn.rollback();
                 return BidResult.failure("Giá đặt phải cao hơn giá hiện tại");
@@ -71,7 +76,7 @@ public class BidService {
     }
 
     private ProductSnapshot lockProduct(Connection conn, int productId) throws SQLException {
-        String sql = "SELECT current_price, status, end_time FROM products WHERE id = ? FOR UPDATE";
+        String sql = "SELECT current_price, status, start_time, end_time FROM products WHERE id = ? FOR UPDATE";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, productId);
@@ -81,11 +86,13 @@ public class BidService {
                     return null;
                 }
 
+                Timestamp startTimestamp = rs.getTimestamp("start_time");
                 Timestamp endTimestamp = rs.getTimestamp("end_time");
 
                 return new ProductSnapshot(
                         rs.getDouble("current_price"),
                         rs.getString("status"),
+                        startTimestamp == null ? null : startTimestamp.toLocalDateTime(),
                         endTimestamp == null ? null : endTimestamp.toLocalDateTime()
                 );
             }
@@ -101,6 +108,10 @@ public class BidService {
         }
 
         return endTime != null && !endTime.isAfter(LocalDateTime.now());
+    }
+
+    private boolean isAuctionNotStarted(LocalDateTime startTime) {
+        return startTime != null && startTime.isAfter(LocalDateTime.now());
     }
 
     private LocalDateTime extendIfNeeded(LocalDateTime endTime) {
@@ -138,11 +149,13 @@ public class BidService {
     private static class ProductSnapshot {
         double currentPrice;
         String status;
+        LocalDateTime startTime;
         LocalDateTime endTime;
 
-        ProductSnapshot(double currentPrice, String status, LocalDateTime endTime) {
+        ProductSnapshot(double currentPrice, String status, LocalDateTime startTime, LocalDateTime endTime) {
             this.currentPrice = currentPrice;
             this.status = status;
+            this.startTime = startTime;
             this.endTime = endTime;
         }
     }

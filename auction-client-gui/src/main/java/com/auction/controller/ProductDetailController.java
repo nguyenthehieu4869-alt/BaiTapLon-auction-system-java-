@@ -81,6 +81,11 @@ public class ProductDetailController {
                 return;
             }
 
+            if (isAuctionNotStarted()) {
+                AlertUtil.showError("Phiên đấu giá chưa bắt đầu, không thể đặt giá.");
+                return;
+            }
+
             BidResult result = bidService.placeBid(product, username, newPrice);
 
             if (!result.isSuccess()) {
@@ -129,7 +134,7 @@ public class ProductDetailController {
         productNameLabel.setText("Name: " + product.getName());
         descriptionLabel.setText("Description: " + product.getDescription());
         currentPriceLabel.setText(PriceFormatter.formatVND(product.getCurrentPrice()));
-        statusLabel.setText("Status: " + product.getStatus());
+        statusLabel.setText("Status: " + getDisplayStatus());
         updateProductImage(product.getImagePath());
 
         bidderUsernameColumn.setCellValueFactory(new PropertyValueFactory<>("bidderUsername"));
@@ -162,9 +167,9 @@ public class ProductDetailController {
     }
 
     private void updateBidControls() {
-        boolean ended = isAuctionEnded();
-        bidAmountField.setDisable(ended);
-        placeBidButton.setDisable(ended);
+        boolean unavailable = isAuctionEnded() || isAuctionNotStarted();
+        bidAmountField.setDisable(unavailable);
+        placeBidButton.setDisable(unavailable);
     }
 
     private boolean isAuctionEnded() {
@@ -180,6 +185,24 @@ public class ProductDetailController {
 
         return product.getEndTime() != null
                 && !product.getEndTime().isAfter(LocalDateTime.now());
+    }
+
+    private boolean isAuctionNotStarted() {
+        return product == null
+                || (product.getStartTime() != null
+                && product.getStartTime().isAfter(LocalDateTime.now()));
+    }
+
+    private String getDisplayStatus() {
+        if (isAuctionNotStarted()) {
+            return "COMING SOON";
+        }
+
+        if (isAuctionEnded()) {
+            return "FINISHED";
+        }
+
+        return product.getStatus();
     }
 
     private void updateProductImage(String imagePath) {

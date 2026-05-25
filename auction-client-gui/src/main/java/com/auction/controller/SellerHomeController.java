@@ -52,9 +52,6 @@ public class SellerHomeController {
     @FXML
     private Label welcomeLabel;
 
-    @FXML
-    private TextField durationMinutesField;
-
     private String username;
 
     private final RemoteProductService productService = new RemoteProductService();
@@ -142,6 +139,16 @@ public class SellerHomeController {
 
         LocalDateTime now = LocalDateTime.now();
 
+        if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
+            java.time.Duration duration =
+                    java.time.Duration.between(now, product.getStartTime());
+
+            return String.format("Bắt đầu sau %02d:%02d:%02d",
+                    duration.toHours(),
+                    duration.toMinutesPart(),
+                    duration.toSecondsPart());
+        }
+
         if (!product.getEndTime().isAfter(now)) {
             return "Ended";
         }
@@ -157,12 +164,17 @@ public class SellerHomeController {
     }
 
     private String getDisplayStatus(Product product) {
+        if (product.getStartTime() != null &&
+                product.getStartTime().isAfter(LocalDateTime.now())) {
+            return "COMING SOON";
+        }
+
         if (product.getEndTime() != null &&
                 !product.getEndTime().isAfter(LocalDateTime.now())) {
             return "FINISHED";
         }
 
-        return product.getStatus();
+        return "OPENING";
     }
 
     private void startCountdownTimer() {
@@ -192,7 +204,7 @@ public class SellerHomeController {
 
             Stage stage = new Stage();
             stage.setTitle("Add Product");
-            stage.setScene(new Scene(root, 720, 740));
+            stage.setScene(new Scene(root, 720, 800));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
 
@@ -201,27 +213,6 @@ public class SellerHomeController {
         } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.showError("Không thể mở form thêm sản phẩm");
-        }
-    }
-
-    @FXML
-    private void handleDeleteProduct(){
-        Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
-
-        if (selectedProduct == null){
-            AlertUtil.showError("Vui lòng chọn sản phẩm cần xoá!");
-            return;
-        }
-
-        if (AlertUtil.showConfirm("Xác nhận xoá", "Bạn có muốn xoá: " + selectedProduct.getName() + "?")){
-            boolean success = productService.deleteProduct(selectedProduct.getId());
-
-            if (success){
-                AlertUtil.showInfo("Xoá sản phẩm thành công !");
-                loadProducts();
-            }else {
-                AlertUtil.showInfo("Xoá sản phẩm thất bại !");
-            }
         }
     }
 
@@ -253,33 +244,6 @@ public class SellerHomeController {
         }catch (Exception e){
             e.printStackTrace();
             AlertUtil.showError("Không thể mở trang edit sản phẩm !");
-        }
-    }
-
-    @FXML
-    private void handleCloseAuction() {
-        Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
-
-        if (selectedProduct == null) {
-            AlertUtil.showError("Vui lòng chọn sản phẩm cần đóng đấu giá");
-            return;
-        }
-
-        if ("CLOSED".equalsIgnoreCase(selectedProduct.getStatus())) {
-            AlertUtil.showInfo("Sản phẩm đã được đóng đấu giá !");
-            return;
-        }
-
-        if (AlertUtil.showConfirm("Xác nhận đóng đấu giá",
-                "Bạn có chắc muốn đóng đấu giá sản phẩm: " + selectedProduct.getName() + "?")) {
-            boolean success = productService.closeAuction(selectedProduct.getId());
-
-            if (success) {
-                AlertUtil.showInfo("Đóng đấu giá thành công");
-                loadProducts();
-            } else {
-                AlertUtil.showError("Đóng đấu giá thất bại");
-            }
         }
     }
 

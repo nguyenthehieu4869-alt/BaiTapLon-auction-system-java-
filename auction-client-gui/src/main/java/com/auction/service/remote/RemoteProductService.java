@@ -41,8 +41,6 @@ public class RemoteProductService {
     public boolean addProduct(String name, String description, double startPrice,
                               LocalDateTime startTime, LocalDateTime endTime,
                               String sellerUsername, String imagePath) {
-        int durationMinutes = Math.max(1, (int) java.time.Duration.between(startTime, endTime).toMinutes());
-
         ProductSaveRequest request = new ProductSaveRequest(
                 0,
                 name,
@@ -50,7 +48,8 @@ public class RemoteProductService {
                 imagePath,
                 startPrice,
                 "OPEN",
-                durationMinutes,
+                startTime.toString(),
+                endTime.toString(),
                 sellerUsername
         );
 
@@ -70,7 +69,8 @@ public class RemoteProductService {
                 imagePath,
                 startPrice,
                 status,
-                0,
+                null,
+                null,
                 null
         );
 

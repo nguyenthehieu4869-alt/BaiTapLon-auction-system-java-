@@ -197,8 +197,16 @@ public class MessageHandler {
     private void handleAddProduct(Message msg) {
         ProductSaveRequest request = parseData(msg, ProductSaveRequest.class);
 
-        LocalDateTime startTime = LocalDateTime.now();
-        LocalDateTime endTime = startTime.plusMinutes(request.getDurationMinutes());
+        LocalDateTime startTime = parseDateTime(request.getStartTime(), "Thieu thoi diem bat dau");
+        LocalDateTime endTime = parseDateTime(request.getEndTime(), "Thieu thoi diem ket thuc");
+
+        if (!endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException("Thoi diem ket thuc phai sau thoi diem bat dau");
+        }
+
+        if (!endTime.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Thoi diem ket thuc phai sau thoi diem hien tai");
+        }
 
         ProductDAO dao = new ProductDAO();
         boolean result = dao.addProduct(
@@ -206,6 +214,7 @@ public class MessageHandler {
                 request.getDescription(),
                 request.getImagePath(),
                 request.getStartPrice(),
+                startTime.isAfter(LocalDateTime.now()) ? "COMING SOON" : "OPEN",
                 Timestamp.valueOf(startTime),
                 Timestamp.valueOf(endTime),
                 request.getSellerUsername()
@@ -217,6 +226,14 @@ public class MessageHandler {
                 result,
                 result ? "Thêm sản phẩm thành công!" : "Thêm sản phẩm thất bại"
         ));
+    }
+
+    private LocalDateTime parseDateTime(String value, String missingMessage) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(missingMessage);
+        }
+
+        return LocalDateTime.parse(value);
     }
 
     private void handleEditProduct(Message msg) {

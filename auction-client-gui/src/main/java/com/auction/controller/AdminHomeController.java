@@ -98,20 +98,17 @@ public class AdminHomeController {
     }
 
     @FXML
-    private void handleDeleteFinishedProduct() {
+    private void handleDeleteProduct() {
         Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
 
         if (selectedProduct == null) {
-            AlertUtil.showError("Vui lòng chỉ chọn sản phẩm đã FINISHED");
+            AlertUtil.showError("Vui lòng chọn sản phẩm cần xoá");
             return;
         }
 
-        if (!isFinishedProduct(selectedProduct)) {
-            AlertUtil.showWarning("Chỉ có thể xoá sản phẩm đã FINISHED");
-            return;
-        }
-
-        if (AlertUtil.showConfirm("Xác nhận xoá", "Bạn có muốn xoá sản phẩm: " + selectedProduct.getName() + "?")) {
+        if (AlertUtil.showConfirm(
+                "Xác nhận xoá",
+                "Bạn có muốn xoá sản phẩm: " + selectedProduct.getName() + "?")) {
             if (productService.deleteProduct(selectedProduct.getId())) {
                 AlertUtil.showInfo("Xoá sản phẩm thành công");
                 loadProducts();
@@ -137,6 +134,10 @@ public class AdminHomeController {
     }
 
     private String getDisplayStatus(Product product) {
+        if (product.getStartTime() != null && product.getStartTime().isAfter(LocalDateTime.now())) {
+            return "COMING SOON";
+        }
+
         if (isFinishedProduct(product)) {
             return "FINISHED";
         }
@@ -146,6 +147,14 @@ public class AdminHomeController {
     private String formatTimeLeft(Product product) {
         if (product.getEndTime() == null) {
             return "N/A";
+        }
+
+        if (product.getStartTime() != null && product.getStartTime().isAfter(LocalDateTime.now())) {
+            java.time.Duration duration = java.time.Duration.between(LocalDateTime.now(), product.getStartTime());
+            return String.format("Bắt đầu sau %02d:%02d:%02d",
+                    duration.toHours(),
+                    duration.toMinutesPart(),
+                    duration.toSecondsPart());
         }
 
         if (!product.getEndTime().isAfter(LocalDateTime.now())) {

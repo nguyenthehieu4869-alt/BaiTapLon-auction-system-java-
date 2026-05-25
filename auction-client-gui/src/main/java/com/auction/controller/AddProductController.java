@@ -3,6 +3,7 @@ package com.auction.controller;
 import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
 import javafx.fxml.FXML;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -12,9 +13,14 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class AddProductController {
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("H:mm");
 
     @FXML
     private TextField nameField;
@@ -26,7 +32,16 @@ public class AddProductController {
     private TextField startPriceField;
 
     @FXML
-    private TextField durationMinutesField;
+    private DatePicker startDatePicker;
+
+    @FXML
+    private TextField startTimeField;
+
+    @FXML
+    private DatePicker endDatePicker;
+
+    @FXML
+    private TextField endTimeField;
 
     @FXML
     private ImageView productImagePreview;
@@ -85,9 +100,8 @@ public class AddProductController {
         String name = nameField.getText().trim();
         String description = descriptionArea.getText().trim();
         String priceText = startPriceField.getText().trim();
-        String durationText = durationMinutesField.getText().trim();
 
-        if (name.isEmpty() || description.isEmpty() || priceText.isEmpty() || durationText.isEmpty()) {
+        if (name.isEmpty() || description.isEmpty() || priceText.isEmpty()) {
             AlertUtil.showError("Vui lòng nhập đầy đủ thông tin !");
             return;
         }
@@ -106,22 +120,25 @@ public class AddProductController {
             return;
         }
 
-        int durationMinutes;
-
-        try {
-            durationMinutes = Integer.parseInt(durationText);
-        } catch (NumberFormatException e) {
-            AlertUtil.showError("Vui lòng nhập thời lượng đấu giá hợp lệ !");
+        LocalDateTime startTime = parseAuctionDateTime(startDatePicker, startTimeField, "bắt đầu");
+        if (startTime == null) {
             return;
         }
 
-        if (durationMinutes <= 0) {
-            AlertUtil.showError("Vui lòng nhập thời lượng đấu giá hợp lệ !");
+        LocalDateTime endTime = parseAuctionDateTime(endDatePicker, endTimeField, "kết thúc");
+        if (endTime == null) {
             return;
         }
 
-        LocalDateTime startTime = LocalDateTime.now();
-        LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
+        if (!endTime.isAfter(startTime)) {
+            AlertUtil.showError("Thời điểm kết thúc phải sau thời điểm bắt đầu !");
+            return;
+        }
+
+        if (!endTime.isAfter(LocalDateTime.now())) {
+            AlertUtil.showError("Thời điểm kết thúc phải sau thời điểm hiện tại !");
+            return;
+        }
 
         if (sellerUsername == null || sellerUsername.isBlank()) {
             AlertUtil.showError("Không xác định được tài khoản seller !");
@@ -149,6 +166,24 @@ public class AddProductController {
     @FXML
     private void handleCancel() {
         closeWindow();
+    }
+
+    private LocalDateTime parseAuctionDateTime(DatePicker datePicker, TextField timeField, String fieldName) {
+        LocalDate date = datePicker.getValue();
+        String timeText = timeField.getText().trim();
+
+        if (date == null || timeText.isEmpty()) {
+            AlertUtil.showError("Vui lòng nhập thời điểm " + fieldName + " !");
+            return null;
+        }
+
+        try {
+            LocalTime time = LocalTime.parse(timeText, TIME_FORMATTER);
+            return LocalDateTime.of(date, time);
+        } catch (DateTimeParseException e) {
+            AlertUtil.showError("Vui lòng nhập giờ " + fieldName + " theo định dạng HH:mm !");
+            return null;
+        }
     }
 
     private void updateImagePreview(String imagePath) {

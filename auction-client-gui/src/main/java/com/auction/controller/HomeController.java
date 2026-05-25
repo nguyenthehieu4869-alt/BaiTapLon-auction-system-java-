@@ -2,6 +2,8 @@ package com.auction.controller;
 
 import com.auction.model.Product;
 
+import com.auction.network.AuctionNetworkClient;
+import com.auction.network.BidUpdateListener;
 import com.auction.service.remote.RemoteBidService;
 import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
@@ -46,6 +48,7 @@ public class HomeController {
 
     @FXML
     private void handleLogout() {
+        AuctionNetworkClient.getInstance().removeBidUpdateListener(bidUpdateListener);
         try {
             Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();
 
@@ -84,6 +87,7 @@ public class HomeController {
     private final RemoteBidService bidService = new RemoteBidService();
     private final Map<Integer, String> leaderUsernameCache = new HashMap<>();
     private final Set<Integer> leaderCacheLoaded = new HashSet<>();
+    private final BidUpdateListener bidUpdateListener = message -> handleBidUpdate(message);
 
     @FXML
     public void initialize() {
@@ -93,6 +97,7 @@ public class HomeController {
         startPriceColumn.setStyle("-fx-alignment: CENTER_RIGHT;");
         currentPriceColumn.setStyle("-fx-alignment: CENTER_RIGHT;");
         timeLeftColumn.setStyle("-fx-alignment: CENTER;");
+        AuctionNetworkClient.getInstance().addBidUpdateListener(bidUpdateListener);
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
@@ -144,7 +149,7 @@ public class HomeController {
                 } else if (status.startsWith("FINISHED") || status.equalsIgnoreCase("CLOSED")) {
                     getStyleClass().add("status-finished");
                 } else {
-                    getStyleClass().add("status-muted");
+                    getStyleClass().add("status-comingsoon");
                 }
             }
         });
@@ -167,6 +172,50 @@ public class HomeController {
         leaderUsernameCache.clear();
         leaderCacheLoaded.clear();
         productTable.setItems(productService.getAllProducts());
+        updateDashboardMessages();
+    }
+
+    private void handleBidUpdate(org.example.network.protocol.Message message) {
+        if (message == null || message.getData() == null || productTable == null) {
+            return;
+        }
+
+        Object dataObj = message.getData();
+        if (!(dataObj instanceof Map<?, ?> data)) {
+            return;
+        }
+
+        Object productIdObj = data.get("productId");
+        Object currentPriceObj = data.get("currentPrice");
+        Object endTimeObj = data.get("endTime");
+        Object bidderUsernameObj = data.get("bidderUsername");
+
+        if (!(productIdObj instanceof Number productIdNumber) || !(currentPriceObj instanceof Number currentPriceNumber)) {
+            return;
+        }
+
+        int productId = productIdNumber.intValue();
+
+        for (Product product : productTable.getItems()) {
+            if (product.getId() != productId) {
+                continue;
+            }
+
+            product.setCurrentPrice(currentPriceNumber.doubleValue());
+
+            if (endTimeObj instanceof String endTimeText && !endTimeText.isBlank()) {
+                product.setEndTime(LocalDateTime.parse(endTimeText));
+            }
+
+            if (bidderUsernameObj instanceof String bidderUsername && !bidderUsername.isBlank()) {
+                leaderUsernameCache.put(productId, bidderUsername);
+                leaderCacheLoaded.add(productId);
+            }
+
+            break;
+        }
+
+        productTable.refresh();
         updateDashboardMessages();
     }
 
@@ -207,6 +256,16 @@ public class HomeController {
 
         LocalDateTime now = LocalDateTime.now();
 
+        if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
+            java.time.Duration duration =
+                    java.time.Duration.between(now, product.getStartTime());
+
+            return String.format("Bắt đầu sau %02d:%02d:%02d",
+                    duration.toHours(),
+                    duration.toMinutesPart(),
+                    duration.toSecondsPart());
+        }
+
         if (!product.getEndTime().isAfter(now)) {
             return "Ended";
         }
@@ -222,17 +281,23 @@ public class HomeController {
     }
 
     private String getDisplayStatus(Product product) {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
+            return "COMING SOON";
+        }
+
         String leaderUsername = getCachedLeaderUsername(product.getId());
 
         if (product.getEndTime() != null &&
-                !product.getEndTime().isAfter(LocalDateTime.now())) {
+                !product.getEndTime().isAfter(now)) {
             return leaderUsername == null || leaderUsername.isBlank()
                     ? "FINISHED"
                     : "FINISHED - Winner: " + leaderUsername;
         }
 
         return leaderUsername == null || leaderUsername.isBlank()
-                ? product.getStatus()
+                ? "OPENING"
                 : "OPENING - Current Leader: " + leaderUsername;
     }
 
@@ -301,7 +366,13 @@ public class HomeController {
             return false;
         }
 
-        if (product.getEndTime() != null && !product.getEndTime().isAfter(LocalDateTime.now())) {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
+            return false;
+        }
+
+        if (product.getEndTime() != null && !product.getEndTime().isAfter(now)) {
             return false;
         }
 
@@ -311,9 +382,6 @@ public class HomeController {
                 && !status.equalsIgnoreCase("CLOSED");
     }
 
-    private boolean isFinishedProduct(Product product) {
-        return product != null && product.getEndTime() != null && !product.getEndTime().isAfter(LocalDateTime.now());
-    }
 }
 
 

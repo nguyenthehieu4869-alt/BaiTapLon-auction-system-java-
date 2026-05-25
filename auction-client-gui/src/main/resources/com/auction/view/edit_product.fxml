@@ -74,12 +74,8 @@
 
                                 <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Giá khởi điểm" GridPane.rowIndex="2" />
                                 <TextField fx:id="startPriceField" prefHeight="42.0" promptText="Nhập giá khởi điểm" style="-fx-background-color: #f8f5ea;                                                   -fx-background-radius: 12;                                                   -fx-border-color: #d4af37;                                                   -fx-border-radius: 12;                                                   -fx-border-width: 1;                                                   -fx-text-fill: #0f1f1f;                                                   -fx-prompt-text-fill: #7a6e47;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-
-                                <Label style="-fx-text-fill: #d4af37; -fx-font-size: 14px; -fx-font-weight: bold;" text="Trạng thái" GridPane.rowIndex="3" />
-                                <ComboBox fx:id="statusComboBox" prefHeight="42.0" style="-fx-background-color: #f8f5ea;                                                  -fx-background-radius: 12;                                                  -fx-border-color: #d4af37;                                                  -fx-border-radius: 12;                                                  -fx-border-width: 1;                                                  -fx-text-fill: #0f1f1f;                                                  -fx-mark-color: #003c3a;" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                             </children>
                      <rowConstraints>
-                        <RowConstraints />
                         <RowConstraints />
                         <RowConstraints />
                         <RowConstraints />

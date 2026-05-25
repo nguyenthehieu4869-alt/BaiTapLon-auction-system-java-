@@ -80,12 +80,12 @@ public class ProductDAO {
    }
 
    public boolean addProduct(String name, String description, String imagePath,
-                             double startPrice, Timestamp startTime,
+                             double startPrice, String status, Timestamp startTime,
                              Timestamp endTime, String sellerUsername) {
       String sql = """
             INSERT INTO products
             (name, description, image_path, start_price, current_price, status, start_time, end_time, seller_username)
-            VALUES (?, ?, ?, ?, ?, 'OPEN', ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
       try (Connection conn = DatabaseManager.getConnection();
@@ -96,9 +96,10 @@ public class ProductDAO {
          ps.setString(3, imagePath);
          ps.setDouble(4, startPrice);
          ps.setDouble(5, startPrice);
-         ps.setTimestamp(6, startTime);
-         ps.setTimestamp(7, endTime);
-         ps.setString(8, sellerUsername);
+         ps.setString(6, status);
+         ps.setTimestamp(7, startTime);
+         ps.setTimestamp(8, endTime);
+         ps.setString(9, sellerUsername);
 
          return ps.executeUpdate() > 0;
 
