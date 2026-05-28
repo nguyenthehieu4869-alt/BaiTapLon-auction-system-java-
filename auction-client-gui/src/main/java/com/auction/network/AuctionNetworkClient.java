@@ -24,19 +24,43 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class AuctionNetworkClient {
+
     private static final Properties CONFIG = loadConfig();
-    private static final String HOST = getConfig("server.host", "AUCTION_SERVER_HOST", "localhost");
-    private static final int PORT = getIntConfig("server.port", "AUCTION_SERVER_PORT", 9999);
-    private static final AuctionNetworkClient INSTANCE = new AuctionNetworkClient();
+
+    private static final String HOST =
+            getConfig(
+                    "server.host",
+                    "AUCTION_SERVER_HOST",
+                    "localhost"
+            );
+
+    private static final int PORT =
+            getIntConfig(
+                    "server.port",
+                    "AUCTION_SERVER_PORT",
+                    9999
+            );
+
+    private static final AuctionNetworkClient INSTANCE =
+            new AuctionNetworkClient();
 
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
     private Thread listenerThread;
 
-    private final ConcurrentMap<String, CompletableFuture<Message>> pendingResponses = new ConcurrentHashMap<>();
-    private final LinkedBlockingQueue<Message> uncorrelatedResponses = new LinkedBlockingQueue<>();
-    private final List<BidUpdateListener> bidUpdateListeners = new CopyOnWriteArrayList<>();
+    private final ConcurrentMap<String,
+            CompletableFuture<Message>>
+            pendingResponses =
+            new ConcurrentHashMap<>();
+
+    private final LinkedBlockingQueue<Message>
+            uncorrelatedResponses =
+            new LinkedBlockingQueue<>();
+
+    private final List<BidUpdateListener>
+            bidUpdateListeners =
+            new CopyOnWriteArrayList<>();
 
     private AuctionNetworkClient() {
     }
@@ -46,6 +70,7 @@ public class AuctionNetworkClient {
     }
 
     public synchronized boolean connect() {
+
         if (isConnected()) {
             return true;
         }
@@ -53,159 +78,389 @@ public class AuctionNetworkClient {
         close();
 
         try {
-            socket = new Socket(HOST, PORT);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
+
+            System.out.println(
+                    "Trying config connection: "
+                            + HOST
+                            + ":"
+                            + PORT
+            );
+
+            socket =
+                    new Socket(
+                            HOST,
+                            PORT
+                    );
+
+            in =
+                    new BufferedReader(
+                            new InputStreamReader(
+                                    socket.getInputStream()
+                            )
+                    );
+
+            out =
+                    new PrintWriter(
+                            socket.getOutputStream(),
+                            true
+                    );
 
             startListener();
+
             return true;
+
         } catch (Exception e) {
+
+            System.out.println(
+                    "Config failed -> trying discovery..."
+            );
+
+            return tryDiscoveryConnect();
+        }
+    }
+    private boolean tryDiscoveryConnect() {
+
+        try {
+
+            ServerDiscoveryClient.ServerInfo serverInfo =
+                    ServerDiscoveryClient.discoverServer();
+
+            if (serverInfo == null) {
+
+                System.out.println(
+                        "No server discovered"
+                );
+
+                return false;
+            }
+
+            socket =
+                    new Socket(
+                            serverInfo.getIp(),
+                            serverInfo.getPort()
+                    );
+
+            in =
+                    new BufferedReader(
+                            new InputStreamReader(
+                                    socket.getInputStream()
+                            )
+                    );
+
+            out =
+                    new PrintWriter(
+                            socket.getOutputStream(),
+                            true
+                    );
+
+            startListener();
+
+            System.out.println(
+                    "Connected using discovery: "
+                            + serverInfo.getIp()
+                            + ":"
+                            + serverInfo.getPort()
+            );
+
+            return true;
+
+        } catch (Exception e) {
+
             close();
+
             return false;
         }
     }
 
     public Message sendAndWait(Message message) {
+
         if (message == null) {
-            return errorMessage("Request khong hop le.");
+            return errorMessage(
+                    "Request khong hop le."
+            );
         }
 
-        String requestId = message.getRequestId();
-        if (requestId == null || requestId.isBlank()) {
-            requestId = UUID.randomUUID().toString();
-            message.setRequestId(requestId);
+        String requestId =
+                message.getRequestId();
+
+        if (requestId == null
+                || requestId.isBlank()) {
+
+            requestId =
+                    UUID.randomUUID()
+                            .toString();
+
+            message.setRequestId(
+                    requestId
+            );
         }
 
-        CompletableFuture<Message> future = new CompletableFuture<>();
+        CompletableFuture<Message>
+                future =
+                new CompletableFuture<>();
 
         synchronized (this) {
+
             if (!connect()) {
-                return errorMessage("Khong ket noi duoc server. Hay chay AuctionServer truoc.");
+
+                return errorMessage(
+                        "Khong ket noi duoc server."
+                );
             }
 
             if (out == null) {
+
                 close();
-                return errorMessage("Mat ket noi server.");
+
+                return errorMessage(
+                        "Mat ket noi server."
+                );
             }
 
-            pendingResponses.put(requestId, future);
-            out.println(Protocol.encode(message));
+            pendingResponses.put(
+                    requestId,
+                    future
+            );
+
+            out.println(
+                    Protocol.encode(
+                            message
+                    )
+            );
 
             if (out.checkError()) {
-                pendingResponses.remove(requestId);
+
+                pendingResponses.remove(
+                        requestId
+                );
+
                 close();
-                return errorMessage("Khong gui duoc request den server.");
+
+                return errorMessage(
+                        "Khong gui duoc request."
+                );
             }
         }
 
         try {
-            return future.get(5, TimeUnit.SECONDS);
+
+            return future.get(
+                    5,
+                    TimeUnit.SECONDS
+            );
+
         } catch (TimeoutException e) {
-            pendingResponses.remove(requestId);
+
+            pendingResponses.remove(
+                    requestId
+            );
+
             close();
-            return errorMessage("Server khong phan hoi.");
+
+            return errorMessage(
+                    "Server khong phan hoi."
+            );
+
         } catch (InterruptedException e) {
-            pendingResponses.remove(requestId);
-            Thread.currentThread().interrupt();
-            return errorMessage("Request bi gian doan.");
+
+            pendingResponses.remove(
+                    requestId
+            );
+
+            Thread.currentThread()
+                    .interrupt();
+
+            return errorMessage(
+                    "Request bi gian doan."
+            );
+
         } catch (Exception e) {
-            pendingResponses.remove(requestId);
+
+            pendingResponses.remove(
+                    requestId
+            );
+
             close();
-            return errorMessage("Loi ket noi server: " + e.getMessage());
+
+            return errorMessage(
+                    "Loi ket noi server: "
+                            + e.getMessage()
+            );
         }
     }
 
-    public void addBidUpdateListener(BidUpdateListener listener) {
+    public void addBidUpdateListener(
+            BidUpdateListener listener
+    ) {
+
         if (listener != null) {
-            bidUpdateListeners.add(listener);
+
+            bidUpdateListeners.add(
+                    listener
+            );
         }
     }
 
-    public void removeBidUpdateListener(BidUpdateListener listener) {
-        bidUpdateListeners.remove(listener);
+    public void removeBidUpdateListener(
+            BidUpdateListener listener
+    ) {
+
+        bidUpdateListeners.remove(
+                listener
+        );
     }
 
     private void startListener() {
-        listenerThread = new Thread(() -> {
-            try {
-                String line;
 
-                while ((line = in.readLine()) != null) {
-                    Message message = Protocol.decode(line);
+        listenerThread =
+                new Thread(() -> {
 
-                    if (message.getType() == MessageType.BID_UPDATE) {
-                        notifyBidUpdate(message);
-                    } else {
-                        completePendingResponse(message);
+                    try {
+
+                        String line;
+
+                        while ((line =
+                                in.readLine())
+                                != null) {
+
+                            Message message =
+                                    Protocol.decode(
+                                            line
+                                    );
+
+                            if (message.getType()
+                                    == MessageType.BID_UPDATE) {
+
+                                notifyBidUpdate(
+                                        message
+                                );
+
+                            } else {
+
+                                completePendingResponse(
+                                        message
+                                );
+                            }
+                        }
+
+                    } catch (Exception e) {
+
+                        close();
                     }
-                }
-            } catch (Exception e) {
-                close();
-            }
-        });
+                });
 
-        listenerThread.setDaemon(true);
+        listenerThread.setDaemon(
+                true
+        );
+
         listenerThread.start();
     }
 
-    private void completePendingResponse(Message message) {
-        String requestId = message.getRequestId();
+    private void completePendingResponse(
+            Message message
+    ) {
 
-        if (requestId != null && !requestId.isBlank()) {
-            CompletableFuture<Message> future = pendingResponses.remove(requestId);
+        String requestId =
+                message.getRequestId();
+
+        if (requestId != null
+                && !requestId.isBlank()) {
+
+            CompletableFuture<Message>
+                    future =
+                    pendingResponses.remove(
+                            requestId
+                    );
+
             if (future != null) {
-                future.complete(message);
+
+                future.complete(
+                        message
+                );
+
                 return;
             }
         }
 
-        if (pendingResponses.size() == 1) {
-            Map.Entry<String, CompletableFuture<Message>> entry = pendingResponses.entrySet().iterator().next();
-            if (pendingResponses.remove(entry.getKey(), entry.getValue())) {
-                entry.getValue().complete(message);
-                return;
-            }
-        }
-
-        uncorrelatedResponses.offer(message);
+        uncorrelatedResponses.offer(
+                message
+        );
     }
 
-    private void notifyBidUpdate(Message message) {
+    private void notifyBidUpdate(
+            Message message
+    ) {
+
         Platform.runLater(() -> {
-            for (BidUpdateListener listener : bidUpdateListeners) {
-                listener.onBidUpdate(message);
+
+            for (BidUpdateListener listener
+                    : bidUpdateListeners) {
+
+                listener.onBidUpdate(
+                        message
+                );
             }
         });
     }
 
     private boolean isConnected() {
-        return socket != null && socket.isConnected() && !socket.isClosed();
+
+        return socket != null
+                && socket.isConnected()
+                && !socket.isClosed();
     }
 
     public synchronized void close() {
+
         try {
+
             if (socket != null) {
+
                 socket.close();
             }
+
         } catch (Exception ignored) {
         }
 
         socket = null;
         in = null;
         out = null;
+
         uncorrelatedResponses.clear();
-        completeAllPending(errorMessage("Mat ket noi server."));
+
+        completeAllPending(
+                errorMessage(
+                        "Mat ket noi server."
+                )
+        );
     }
 
-    private void completeAllPending(Message message) {
-        for (Map.Entry<String, CompletableFuture<Message>> entry : pendingResponses.entrySet()) {
-            if (pendingResponses.remove(entry.getKey(), entry.getValue())) {
-                entry.getValue().complete(message);
+    private void completeAllPending(
+            Message message
+    ) {
+
+        for (Map.Entry<String,
+                CompletableFuture<Message>>
+                entry :
+                pendingResponses.entrySet()) {
+
+            if (pendingResponses.remove(
+                    entry.getKey(),
+                    entry.getValue()
+            )) {
+
+                entry.getValue()
+                        .complete(
+                                message
+                        );
             }
         }
     }
 
-    private Message errorMessage(String message) {
+    private Message errorMessage(
+            String message
+    ) {
+
         return new Message(
                 MessageType.ERROR,
                 null,
@@ -215,39 +470,89 @@ public class AuctionNetworkClient {
     }
 
     private static Properties loadConfig() {
-        Properties properties = new Properties();
 
-        try (InputStream input = AuctionNetworkClient.class.getClassLoader().getResourceAsStream("config.properties")) {
+        Properties properties =
+                new Properties();
+
+        try (InputStream input =
+                     AuctionNetworkClient.class
+                             .getClassLoader()
+                             .getResourceAsStream(
+                                     "config.properties"
+                             )) {
+
             if (input != null) {
-                properties.load(input);
+
+                properties.load(
+                        input
+                );
             }
+
         } catch (IOException e) {
+
             e.printStackTrace();
         }
 
         return properties;
     }
 
-    private static String getConfig(String propertyKey, String envKey, String defaultValue) {
-        String systemValue = System.getProperty(propertyKey);
-        if (systemValue != null && !systemValue.isBlank()) {
+    private static String getConfig(
+            String propertyKey,
+            String envKey,
+            String defaultValue
+    ) {
+
+        String systemValue =
+                System.getProperty(
+                        propertyKey
+                );
+
+        if (systemValue != null
+                && !systemValue.isBlank()) {
+
             return systemValue;
         }
 
-        String envValue = System.getenv(envKey);
-        if (envValue != null && !envValue.isBlank()) {
+        String envValue =
+                System.getenv(
+                        envKey
+                );
+
+        if (envValue != null
+                && !envValue.isBlank()) {
+
             return envValue;
         }
 
-        return CONFIG.getProperty(propertyKey, defaultValue);
+        return CONFIG.getProperty(
+                propertyKey,
+                defaultValue
+        );
     }
 
-    private static int getIntConfig(String propertyKey, String envKey, int defaultValue) {
-        String value = getConfig(propertyKey, envKey, String.valueOf(defaultValue));
+    private static int getIntConfig(
+            String propertyKey,
+            String envKey,
+            int defaultValue
+    ) {
+
+        String value =
+                getConfig(
+                        propertyKey,
+                        envKey,
+                        String.valueOf(
+                                defaultValue
+                        )
+                );
 
         try {
-            return Integer.parseInt(value);
+
+            return Integer.parseInt(
+                    value
+            );
+
         } catch (NumberFormatException e) {
+
             return defaultValue;
         }
     }

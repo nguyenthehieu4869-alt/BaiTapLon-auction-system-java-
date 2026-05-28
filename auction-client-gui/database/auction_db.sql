@@ -23,7 +23,7 @@ CREATE TABLE products (
 );
 
 CREATE TABLE bids (
-                      id INT AUTO_INCREMENT PRIMARY KEY,
+                   id INT AUTO_INCREMENT PRIMARY KEY,
                       product_id INT NOT NULL,
                       bidder_username VARCHAR(50) NOT NULL,
                       bid_price DOUBLE NOT NULL,

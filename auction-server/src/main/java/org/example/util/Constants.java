@@ -9,7 +9,7 @@ public class Constants {
 
     public static final String HOST = getConfig("server.host", "AUCTION_SERVER_HOST", "localhost");
     public static final int PORT = getIntConfig("server.port", "AUCTION_SERVER_PORT", 9999);
-
+    public static final int DISCOVERY_PORT =   getIntConfig("server.discovery.port","AUCTION_SERVER_PORT",9998);
     private static Properties loadConfig() {
         Properties properties = new Properties();
 
