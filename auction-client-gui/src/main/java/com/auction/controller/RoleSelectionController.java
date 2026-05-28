@@ -68,7 +68,7 @@ public class RoleSelectionController {
     @FXML
     private void handleAdmin(ActionEvent event) {
         if (!isAuthorizedAdmin()) {
-            AlertUtil.showError("Tai khoan nay khong co quyen ADMIN!");
+            AlertUtil.showError("Tài khoản này không có quyền ADMIN!");
             return;
         }
 
@@ -101,7 +101,7 @@ public class RoleSelectionController {
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();
-            AlertUtil.showError("Khong the mo man hinh: " + fxmlPath);
+            AlertUtil.showError("Không thể mở màn hình: " + fxmlPath);
         }
     }
 

@@ -11,6 +11,7 @@
                 <Label style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #f5d76e;" text="Bidder Dashboard" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Label fx:id="welcomeLabel" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #cde8e6;" />
+                <Button onAction="#handleViewProfile" prefHeight="34.0" prefWidth="98.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37; -fx-text-fill: black; -fx-background-radius: 10;" text="Profile" />
             </HBox>
             <Label style="-fx-text-fill: #9ec9c5; -fx-font-size: 13px;" />
         </VBox>

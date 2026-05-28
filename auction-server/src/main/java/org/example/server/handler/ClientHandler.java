@@ -49,7 +49,7 @@ public class ClientHandler extends Thread {
                             MessageType.ERROR,
                             null,
                             false,
-                            "Message khong hop le"
+                            "Message không hợp lệ"
                     )));
                 }
             }

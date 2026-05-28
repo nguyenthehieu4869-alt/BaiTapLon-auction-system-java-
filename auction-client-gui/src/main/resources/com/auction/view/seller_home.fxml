@@ -16,7 +16,8 @@
                      <Font size="14.0" />
                   </font></Label>
                     <Region HBox.hgrow="ALWAYS" />
-                    <Label fx:id="welcomeLabel" style="-fx-text-fill: #cde8e6; -fx-font-size: 14px; -fx-font-weight: 700;" text="Welcome Seller" />
+                    <Label fx:id="welcomeLabel" style="-fx-text-fill: #cde8e6; -fx-font-size: 14px; -fx-font-weight: 700;" text="Xin chào Seller" />
+                    <Button onAction="#handleViewProfile" prefHeight="34.0" prefWidth="98.0" style="-fx-font-weight: bold; -fx-background-color: #d4af37; -fx-text-fill: #06211f; -fx-background-radius: 10;" text="Profile" />
                 </HBox>
 
                 <Label style="-fx-text-fill: #9ec9c5; -fx-font-size: 13px;" />

@@ -4,6 +4,7 @@ import com.auction.model.Product;
 
 import com.auction.network.AuctionNetworkClient;
 import com.auction.network.BidUpdateListener;
+import com.auction.network.ProductUpdateListener;
 import com.auction.service.remote.RemoteBidService;
 import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
@@ -21,7 +22,9 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.example.common.ProductStatus;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -48,7 +51,7 @@ public class HomeController {
 
     @FXML
     private void handleLogout() {
-        AuctionNetworkClient.getInstance().removeBidUpdateListener(bidUpdateListener);
+        unregisterRealtimeListeners();
         try {
             Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();
 
@@ -60,6 +63,15 @@ public class HomeController {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void unregisterRealtimeListeners() {
+        AuctionNetworkClient.getInstance().removeBidUpdateListener(bidUpdateListener);
+        AuctionNetworkClient.getInstance().removeProductUpdateListener(productUpdateListener);
+
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
         }
     }
 
@@ -88,6 +100,7 @@ public class HomeController {
     private final Map<Integer, String> leaderUsernameCache = new HashMap<>();
     private final Set<Integer> leaderCacheLoaded = new HashSet<>();
     private final BidUpdateListener bidUpdateListener = message -> handleBidUpdate(message);
+    private final ProductUpdateListener productUpdateListener = message -> reloadProducts();
 
     @FXML
     public void initialize() {
@@ -98,6 +111,7 @@ public class HomeController {
         currentPriceColumn.setStyle("-fx-alignment: CENTER_RIGHT;");
         timeLeftColumn.setStyle("-fx-alignment: CENTER;");
         AuctionNetworkClient.getInstance().addBidUpdateListener(bidUpdateListener);
+        AuctionNetworkClient.getInstance().addProductUpdateListener(productUpdateListener);
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
@@ -135,7 +149,7 @@ public class HomeController {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
-                getStyleClass().removeAll("status-open", "status-finished", "status-muted");
+                getStyleClass().removeAll("status-open", "status-finished", "status-comingsoon");
 
                 if (empty || status == null) {
                     setText(null);
@@ -144,9 +158,9 @@ public class HomeController {
 
                 setText(status);
 
-                if (status.startsWith("OPENING") || status.equalsIgnoreCase("OPEN")) {
+                if (status.startsWith(ProductStatus.OPENING)) {
                     getStyleClass().add("status-open");
-                } else if (status.startsWith("FINISHED") || status.equalsIgnoreCase("CLOSED")) {
+                } else if (status.startsWith(ProductStatus.FINISHED)) {
                     getStyleClass().add("status-finished");
                 } else {
                     getStyleClass().add("status-comingsoon");
@@ -158,8 +172,7 @@ public class HomeController {
                 new SimpleStringProperty(formatTimeLeft(cellData.getValue()))
         );
 
-        productTable.setItems(productService.getAllProducts());
-        updateDashboardMessages();
+        reloadProducts();
         productTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedProduct) -> {
 
         });
@@ -169,10 +182,31 @@ public class HomeController {
 
     @FXML
     private void handleRefresh() {
+        reloadProducts();
+    }
+
+    private void reloadProducts() {
         leaderUsernameCache.clear();
         leaderCacheLoaded.clear();
         productTable.setItems(productService.getAllProducts());
+        updateProductTablePlaceholder();
         updateDashboardMessages();
+    }
+
+    private void updateProductTablePlaceholder() {
+        String errorMessage = productService.getLastErrorMessage();
+
+        if (errorMessage != null && !errorMessage.isBlank()) {
+            productTable.setPlaceholder(new Label("Không tải được sản phẩm: " + errorMessage));
+            return;
+        }
+
+        productTable.setPlaceholder(new Label("Không có sản phẩm trong DB server hiện tại"));
+    }
+
+    @FXML
+    private void handleViewProfile() {
+        openProfile(ProfileController.ProfileMode.BIDDER, "Bidder Profile");
     }
 
     private void handleBidUpdate(org.example.network.protocol.Message message) {
@@ -238,6 +272,7 @@ public class HomeController {
 
 
             Stage stage = (Stage) productTable.getScene().getWindow();
+            unregisterRealtimeListeners();
             stage.setMaximized(false);
             stage.setScene(new Scene(root, 1200, 700));
             stage.setMaximized(true);
@@ -246,6 +281,33 @@ public class HomeController {
         } catch (Exception e) {
             e.printStackTrace();
             AlertUtil.showError("Không thể mở trang chi tiết sản phẩm");
+        }
+    }
+
+    private void openProfile(ProfileController.ProfileMode mode, String title) {
+        try {
+            FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/profile.fxml");
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root, 500, 430));
+            stage.initModality(Modality.APPLICATION_MODAL);
+
+            if (productTable != null && productTable.getScene() != null) {
+                stage.initOwner(productTable.getScene().getWindow());
+            }
+
+            ProfileController controller = loader.getController();
+            if (!controller.loadProfile(username, mode)) {
+                return;
+            }
+
+            stage.showAndWait();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            AlertUtil.showError("Không thể mở màn hình profile");
         }
     }
 
@@ -281,24 +343,25 @@ public class HomeController {
     }
 
     private String getDisplayStatus(Product product) {
-        LocalDateTime now = LocalDateTime.now();
-
-        if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
-            return "COMING SOON";
+        String baseStatus = getBaseStatus(product);
+        if (ProductStatus.COMING_SOON.equals(baseStatus)) {
+            return baseStatus;
         }
 
         String leaderUsername = getCachedLeaderUsername(product.getId());
-
-        if (product.getEndTime() != null &&
-                !product.getEndTime().isAfter(now)) {
-            return leaderUsername == null || leaderUsername.isBlank()
-                    ? "FINISHED"
-                    : "FINISHED - Winner: " + leaderUsername;
+        if (leaderUsername == null || leaderUsername.isBlank()) {
+            return baseStatus;
         }
 
-        return leaderUsername == null || leaderUsername.isBlank()
-                ? "OPENING"
-                : "OPENING - Current Leader: " + leaderUsername;
+        if (ProductStatus.FINISHED.equals(baseStatus)) {
+            return baseStatus + " - Winner: " + leaderUsername;
+        }
+
+        return baseStatus + " - Current Leader: " + leaderUsername;
+    }
+
+    private String getBaseStatus(Product product) {
+        return ProductStatus.current(product.getStartTime(), product.getEndTime(), product.getStatus());
     }
 
     private String getCachedLeaderUsername(int productId) {
@@ -376,10 +439,7 @@ public class HomeController {
             return false;
         }
 
-        String status = product.getStatus();
-        return status != null
-                && !status.equalsIgnoreCase("DELETED")
-                && !status.equalsIgnoreCase("CLOSED");
+        return ProductStatus.OPENING.equals(getBaseStatus(product));
     }
 
 }

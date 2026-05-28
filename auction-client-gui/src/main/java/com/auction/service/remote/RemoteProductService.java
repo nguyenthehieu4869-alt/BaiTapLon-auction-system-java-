@@ -5,6 +5,7 @@ import com.auction.network.AuctionNetworkClient;
 import com.google.gson.reflect.TypeToken;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.example.common.ProductStatus;
 import org.example.network.dto.ProductDTO;
 import org.example.network.dto.ProductSaveRequest;
 import org.example.network.protocol.Message;
@@ -18,6 +19,11 @@ import java.util.List;
 import java.util.Map;
 
 public class RemoteProductService {
+    private String lastErrorMessage;
+
+    public String getLastErrorMessage() {
+        return lastErrorMessage;
+    }
 
     public ObservableList<Product> getAllProducts() {
         Message response = AuctionNetworkClient.getInstance().sendAndWait(
@@ -47,7 +53,7 @@ public class RemoteProductService {
                 description,
                 imagePath,
                 startPrice,
-                "OPEN",
+                ProductStatus.COMING_SOON,
                 startTime.toString(),
                 endTime.toString(),
                 sellerUsername
@@ -104,23 +110,47 @@ public class RemoteProductService {
     }
 
     private ObservableList<Product> parseProductList(Message response) {
-        if (response == null || !response.isSuccess() || response.getData() == null) {
+        lastErrorMessage = null;
+
+        if (response == null) {
+            lastErrorMessage = "Server không phản hồi.";
             return FXCollections.observableArrayList();
         }
 
-        Type type = new TypeToken<List<ProductDTO>>() {}.getType();
-        List<ProductDTO> dtos = Protocol.gson().fromJson(
-                Protocol.gson().toJson(response.getData()),
-                type
-        );
-
-        ObservableList<Product> products = FXCollections.observableArrayList();
-
-        for (ProductDTO dto : dtos) {
-            products.add(toProduct(dto));
+        if (!response.isSuccess()) {
+            lastErrorMessage = response.getMessage() == null || response.getMessage().isBlank()
+                    ? "Server trả lỗi khi tải sản phẩm."
+                    : response.getMessage();
+            return FXCollections.observableArrayList();
         }
 
-        return products;
+        if (response.getData() == null) {
+            lastErrorMessage = "Server không gửi dữ liệu sản phẩm.";
+            return FXCollections.observableArrayList();
+        }
+
+        try {
+            Type type = new TypeToken<List<ProductDTO>>() {}.getType();
+            List<ProductDTO> dtos = Protocol.gson().fromJson(
+                    Protocol.gson().toJson(response.getData()),
+                    type
+            );
+
+            ObservableList<Product> products = FXCollections.observableArrayList();
+
+            if (dtos == null) {
+                return products;
+            }
+
+            for (ProductDTO dto : dtos) {
+                products.add(toProduct(dto));
+            }
+
+            return products;
+        } catch (Exception e) {
+            lastErrorMessage = "Không đọc được dữ liệu sản phẩm từ server: " + e.getMessage();
+            return FXCollections.observableArrayList();
+        }
     }
 
     private Product toProduct(ProductDTO dto) {

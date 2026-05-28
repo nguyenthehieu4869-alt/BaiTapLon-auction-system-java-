@@ -4,4 +4,13 @@ setlocal
 
 cd /d "%~dp0\.."
 
-mvn -q -pl auction-server -am exec:java
+mvn -q -N install
+if errorlevel 1 exit /b %errorlevel%
+
+mvn -q -pl auction-common install
+if errorlevel 1 exit /b %errorlevel%
+
+mvn -q -pl auction-server -am compile
+if errorlevel 1 exit /b %errorlevel%
+
+mvn -q -pl auction-server exec:java

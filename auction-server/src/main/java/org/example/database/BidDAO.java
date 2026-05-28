@@ -1,5 +1,6 @@
 package org.example.database;
 
+import org.example.common.ProductStatus;
 import org.example.network.dto.BidDTO;
 
 import java.sql.Connection;
@@ -11,46 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BidDAO {
-
-    public boolean placeBid(int productId, String bidderUsername, double bidPrice) {
-        String sql = "INSERT INTO bids (product_id, bidder_username, bid_price) VALUES (?, ?, ?)";
-
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, productId);
-            ps.setString(2, bidderUsername);
-            ps.setDouble(3, bidPrice);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    public double getHighestBid(int productId) {
-        String sql = "SELECT MAX(bid_price) FROM bids WHERE product_id = ?";
-
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, productId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getDouble(1);
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return 0;
-    }
 
     public void updateCurrentPrice(Connection conn, int productId, double bidPrice) throws SQLException {
         String sql = "UPDATE products SET current_price = ? WHERE id = ?";
@@ -144,5 +105,38 @@ public class BidDAO {
         }
 
         return null;
+    }
+
+    public int countWonAuctionsByBidder(String bidderUsername) {
+        String sql = """
+            SELECT COUNT(*)
+            FROM products p
+            WHERE (p.status = ? OR p.end_time <= NOW())
+              AND (
+                  SELECT b.bidder_username
+                  FROM bids b
+                  WHERE b.product_id = p.id
+                  ORDER BY b.bid_price DESC, b.bid_time ASC, b.id ASC
+                  LIMIT 1
+              ) = ?
+            """;
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, ProductStatus.FINISHED);
+            ps.setString(2, bidderUsername);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
     }
 }

@@ -19,7 +19,7 @@
                      <Insets top="10.0" />
                   </HBox.margin></Label>
                     <Region HBox.hgrow="ALWAYS" />
-                    <Label fx:id="welcomeLabel" style="-fx-text-fill: #cde8e6; -fx-font-size: 14px; -fx-font-weight: 700;" text="Welcome Admin" />
+                    <Label fx:id="welcomeLabel" style="-fx-text-fill: #cde8e6; -fx-font-size: 14px; -fx-font-weight: 700;" text="Xin chào Admin" />
                 </HBox>
 
                 <Label style="-fx-text-fill: #9ec9c5; -fx-font-size: 13px;" />

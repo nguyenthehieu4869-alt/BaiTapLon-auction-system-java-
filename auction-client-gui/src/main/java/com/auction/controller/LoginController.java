@@ -56,7 +56,7 @@ public class LoginController {
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();
-            AlertUtil.showError("Khong the mo man hinh chon vai tro: " + e.getMessage());
+            AlertUtil.showError("Không thể mở màn hình chọn vai trò: " + e.getMessage());
         }
     }
 
@@ -72,7 +72,7 @@ public class LoginController {
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();
-            AlertUtil.showError("Khong the mo man hinh dang ky: " + e.getMessage());
+            AlertUtil.showError("Không thể mở màn hình đăng ký: " + e.getMessage());
         }
     }
 }

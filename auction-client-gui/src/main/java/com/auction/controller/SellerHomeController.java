@@ -1,30 +1,31 @@
 package com.auction.controller;
 
-import javafx.event.ActionEvent;
-import javafx.scene.Node;
 import com.auction.model.Product;
 import com.auction.service.remote.RemoteProductService;
+import com.auction.util.AlertUtil;
+import com.auction.util.FxmlUtil;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
-
-import java.text.DecimalFormat;
-
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import com.auction.util.AlertUtil;
-import com.auction.util.FxmlUtil;
+import org.example.common.ProductStatus;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
-
 
 public class SellerHomeController {
 
@@ -164,17 +165,7 @@ public class SellerHomeController {
     }
 
     private String getDisplayStatus(Product product) {
-        if (product.getStartTime() != null &&
-                product.getStartTime().isAfter(LocalDateTime.now())) {
-            return "COMING SOON";
-        }
-
-        if (product.getEndTime() != null &&
-                !product.getEndTime().isAfter(LocalDateTime.now())) {
-            return "FINISHED";
-        }
-
-        return "OPENING";
+        return ProductStatus.current(product.getStartTime(), product.getEndTime(), product.getStatus());
     }
 
     private void startCountdownTimer() {
@@ -191,6 +182,11 @@ public class SellerHomeController {
     @FXML
     private void handleRefresh() {
         loadProducts();
+    }
+
+    @FXML
+    private void handleViewProfile() {
+        openProfile(ProfileController.ProfileMode.SELLER, "Seller Profile");
     }
 
     @FXML
@@ -244,6 +240,33 @@ public class SellerHomeController {
         }catch (Exception e){
             e.printStackTrace();
             AlertUtil.showError("Không thể mở trang edit sản phẩm !");
+        }
+    }
+
+    private void openProfile(ProfileController.ProfileMode mode, String title) {
+        try {
+            FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/profile.fxml");
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root, 500, 430));
+            stage.initModality(Modality.APPLICATION_MODAL);
+
+            if (productTable != null && productTable.getScene() != null) {
+                stage.initOwner(productTable.getScene().getWindow());
+            }
+
+            ProfileController controller = loader.getController();
+            if (!controller.loadProfile(username, mode)) {
+                return;
+            }
+
+            stage.showAndWait();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            AlertUtil.showError("Không thể mở màn hình profile");
         }
     }
 

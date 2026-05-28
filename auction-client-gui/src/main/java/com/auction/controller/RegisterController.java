@@ -1,14 +1,15 @@
 package com.auction.controller;
 
 import com.auction.service.remote.RemoteUserService;
+import com.auction.util.AlertUtil;
 import com.auction.util.FxmlUtil;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import com.auction.util.AlertUtil;
 
 public class RegisterController {
 

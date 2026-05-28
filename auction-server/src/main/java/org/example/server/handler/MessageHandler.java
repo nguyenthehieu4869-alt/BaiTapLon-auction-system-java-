@@ -1,5 +1,6 @@
 package org.example.server.handler;
 
+import org.example.common.ProductStatus;
 import org.example.database.BidDAO;
 import org.example.database.ProductDAO;
 import org.example.database.UserDAO;
@@ -8,6 +9,7 @@ import org.example.network.dto.BidRequest;
 import org.example.network.dto.LoginRequest;
 import org.example.network.dto.ProductSaveRequest;
 import org.example.network.dto.RegisterRequest;
+import org.example.network.dto.UserProfileDTO;
 import org.example.network.protocol.Message;
 import org.example.network.protocol.MessageType;
 import org.example.network.protocol.Protocol;
@@ -33,7 +35,7 @@ public class MessageHandler {
     public void handle(Message msg) {
         try {
             if (msg == null || msg.getType() == null) {
-                sendError(msg, "Message khong hop le");
+                sendError(msg, "Message không hợp lệ");
                 return;
             }
 
@@ -44,6 +46,10 @@ public class MessageHandler {
 
                 case REGISTER:
                     handleRegister(msg);
+                    break;
+
+                case GET_USER_PROFILE:
+                    handleGetUserProfile(msg);
                     break;
 
                 case GET_PRODUCTS:
@@ -83,14 +89,16 @@ public class MessageHandler {
                     break;
 
                 default:
-                    sendError(msg, "Khong hieu message type: " + msg.getType());
+                    sendError(msg, "Không hiểu message type: " + msg.getType());
                     break;
             }
         } catch (IllegalArgumentException e) {
             sendError(msg, e.getMessage());
+        } catch (IllegalStateException e) {
+            sendError(msg, e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            sendError(msg, "Server xu ly request bi loi");
+            sendError(msg, "Server xử lý request bị lỗi");
         }
     }
 
@@ -122,7 +130,39 @@ public class MessageHandler {
                 result ? MessageType.REGISTER_SUCCESS : MessageType.REGISTER_FAIL,
                 null,
                 result,
-                result ? "Dang ky thanh cong" : "Username hoặc email đã tồn tại!"
+                result ? "Đăng ký thành công" : "Username hoặc email đã tồn tại!"
+        ));
+    }
+
+    private void handleGetUserProfile(Message msg) {
+        Map<?, ?> data = getDataMap(msg);
+        String username = getString(data, "username");
+
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Thiếu username");
+        }
+
+        UserDAO userDAO = new UserDAO();
+        String email = userDAO.getEmailByUsername(username);
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Không tìm thấy tài khoản");
+        }
+
+        BidDAO bidDAO = new BidDAO();
+        ProductDAO productDAO = new ProductDAO();
+        UserProfileDTO profile = new UserProfileDTO(
+                username,
+                email,
+                bidDAO.countWonAuctionsByBidder(username),
+                productDAO.countProductsBySeller(username)
+        );
+
+        send(msg, new Message(
+                MessageType.USER_PROFILE,
+                profile,
+                true,
+                "Load profile thành công"
         ));
     }
 
@@ -197,15 +237,20 @@ public class MessageHandler {
     private void handleAddProduct(Message msg) {
         ProductSaveRequest request = parseData(msg, ProductSaveRequest.class);
 
-        LocalDateTime startTime = parseDateTime(request.getStartTime(), "Thieu thoi diem bat dau");
-        LocalDateTime endTime = parseDateTime(request.getEndTime(), "Thieu thoi diem ket thuc");
+        LocalDateTime startTime = parseDateTime(request.getStartTime(), "Thiếu thời điểm bắt đầu");
+        LocalDateTime endTime = parseDateTime(request.getEndTime(), "Thiếu thời điểm kết thúc");
+        LocalDateTime now = LocalDateTime.now();
+
+        if (!startTime.isAfter(now)) {
+            throw new IllegalArgumentException("Thời điểm bắt đầu phải sau thời điểm hiện tại");
+        }
 
         if (!endTime.isAfter(startTime)) {
             throw new IllegalArgumentException("Thoi diem ket thuc phai sau thoi diem bat dau");
         }
 
-        if (!endTime.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Thoi diem ket thuc phai sau thoi diem hien tai");
+        if (!endTime.isAfter(now)) {
+            throw new IllegalArgumentException("Thời điểm kết thúc phải sau thời điểm hiện tại");
         }
 
         ProductDAO dao = new ProductDAO();
@@ -214,7 +259,7 @@ public class MessageHandler {
                 request.getDescription(),
                 request.getImagePath(),
                 request.getStartPrice(),
-                startTime.isAfter(LocalDateTime.now()) ? "COMING SOON" : "OPEN",
+                ProductStatus.COMING_SOON,
                 Timestamp.valueOf(startTime),
                 Timestamp.valueOf(endTime),
                 request.getSellerUsername()
@@ -226,6 +271,10 @@ public class MessageHandler {
                 result,
                 result ? "Thêm sản phẩm thành công!" : "Thêm sản phẩm thất bại"
         ));
+
+        if (result) {
+            broadcastProductChanged("ADD_PRODUCT", null);
+        }
     }
 
     private LocalDateTime parseDateTime(String value, String missingMessage) {
@@ -255,6 +304,10 @@ public class MessageHandler {
                 result,
                 result ? "Cập nhật thành công!" : "Cập nhật sản phẩm thất bại!"
         ));
+
+        if (result) {
+            broadcastProductChanged("EDIT_PRODUCT", request.getId());
+        }
     }
 
     private void handleDeleteProduct(Message msg) {
@@ -270,6 +323,10 @@ public class MessageHandler {
                 result,
                 result ? "Xoá sản phẩm thành công!" : "Xoá sản phẩm thất bại"
         ));
+
+        if (result) {
+            broadcastProductChanged("DELETE_PRODUCT", productId);
+        }
     }
 
     private void handleCloseAuction(Message msg) {
@@ -283,8 +340,28 @@ public class MessageHandler {
                 result ? MessageType.CLOSE_AUCTION : MessageType.ERROR,
                 null,
                 result,
-                result ? "Đóng phiên thành công!" : "Dong phien that bai"
+                result ? "Đóng phiên thành công!" : "Đóng phiên thất bại"
         ));
+
+        if (result) {
+            broadcastProductChanged("CLOSE_AUCTION", productId);
+        }
+    }
+
+    private void broadcastProductChanged(String action, Integer productId) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("action", action);
+
+        if (productId != null) {
+            data.put("productId", productId);
+        }
+
+        ServerManager.broadcast(Protocol.encode(new Message(
+                MessageType.PRODUCT_CHANGED,
+                data,
+                true,
+                "Product list changed"
+        )));
     }
 
     private void handleGetBidHistory(Message msg) {
@@ -297,7 +374,7 @@ public class MessageHandler {
                 MessageType.BID_HISTORY,
                 dao.getBidsByProductId(productId),
                 true,
-                "Load lịch sửa bid thành công!"
+                "Load lịch sử bid thành công!"
         ));
     }
 
@@ -312,13 +389,13 @@ public class MessageHandler {
                 MessageType.WINNER_RESULT,
                 winner,
                 true,
-                "Load winner thanh cong"
+                "Load winner thành công"
         ));
     }
 
     private <T> T parseData(Message msg, Class<T> clazz) {
         if (msg.getData() == null) {
-            throw new IllegalArgumentException("Thieu du lieu request");
+            throw new IllegalArgumentException("Thiếu dữ liệu request");
         }
 
         T value = Protocol.gson().fromJson(
@@ -327,7 +404,7 @@ public class MessageHandler {
         );
 
         if (value == null) {
-            throw new IllegalArgumentException("Du lieu request khong hop le");
+            throw new IllegalArgumentException("Dữ liệu request không hợp lệ");
         }
 
         return value;
@@ -335,7 +412,7 @@ public class MessageHandler {
 
     private Map<?, ?> getDataMap(Message msg) {
         if (!(msg.getData() instanceof Map<?, ?> data)) {
-            throw new IllegalArgumentException("Du lieu request khong hop le");
+            throw new IllegalArgumentException("Dữ liệu request không hợp lệ");
         }
 
         return data;
@@ -357,7 +434,7 @@ public class MessageHandler {
             return Integer.parseInt(text);
         }
 
-        throw new IllegalArgumentException("Thieu hoac sai truong: " + key);
+        throw new IllegalArgumentException("Thiếu hoặc sai trường: " + key);
     }
 
     private void sendError(Message request, String message) {

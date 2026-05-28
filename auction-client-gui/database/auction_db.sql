@@ -16,7 +16,7 @@ CREATE TABLE products (
                           image_path VARCHAR(500),
                           start_price DOUBLE NOT NULL,
                           current_price DOUBLE NOT NULL,
-                          status VARCHAR(20) DEFAULT 'OPEN',
+                          status ENUM('OPENING', 'FINISHED', 'COMING SOON') NOT NULL DEFAULT 'OPENING',
                           start_time DATETIME,
                           end_time DATETIME,
                           seller_username VARCHAR(50)
@@ -39,6 +39,6 @@ VALUES
 
 INSERT INTO products (name, description, start_price, current_price, status, start_time, end_time, seller_username)
 VALUES
-    ('iPhone 15 Pro', 'Dien thoai Apple 256GB', 15000000, 15000000, 'OPEN', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller1'),
-    ('Laptop Gaming', 'Laptop choi game cau hinh cao', 20000000, 20000000, 'OPEN', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller1'),
-    ('Tai nghe Sony', 'Tai nghe chong on', 2000000, 2000000, 'OPEN', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller2');
+    ('iPhone 15 Pro', 'Dien thoai Apple 256GB', 15000000, 15000000, 'OPENING', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller1'),
+    ('Laptop Gaming', 'Laptop choi game cau hinh cao', 20000000, 20000000, 'OPENING', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller1'),
+    ('Tai nghe Sony', 'Tai nghe chong on', 2000000, 2000000, 'OPENING', NOW(), DATE_ADD(NOW(), INTERVAL 60 MINUTE), 'seller2');

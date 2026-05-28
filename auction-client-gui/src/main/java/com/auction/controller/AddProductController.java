@@ -70,7 +70,7 @@ public class AddProductController {
     @FXML
     private void handleChooseImage() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Chon anh san pham");
+        fileChooser.setTitle("Chọn ảnh sản phẩm");
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter(
                         "Image Files",
@@ -130,12 +130,19 @@ public class AddProductController {
             return;
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
+        if (!startTime.isAfter(now)) {
+            AlertUtil.showError("Thoi diem bat dau phai sau thoi diem hien tai !");
+            return;
+        }
+
         if (!endTime.isAfter(startTime)) {
             AlertUtil.showError("Thời điểm kết thúc phải sau thời điểm bắt đầu !");
             return;
         }
 
-        if (!endTime.isAfter(LocalDateTime.now())) {
+        if (!endTime.isAfter(now)) {
             AlertUtil.showError("Thời điểm kết thúc phải sau thời điểm hiện tại !");
             return;
         }
@@ -201,7 +208,7 @@ public class AddProductController {
         File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
             productImagePreview.setImage(null);
-            imageStatusLabel.setText("Khong tim thay anh da chon. Hay thu lai.");
+            imageStatusLabel.setText("Không tìm thấy ảnh đã chọn. Hãy thử lại.");
             imagePlaceholderLabel.setVisible(true);
             return;
         }
@@ -210,17 +217,17 @@ public class AddProductController {
             Image image = new Image(imageFile.toURI().toString(), 180, 120, true, true);
             if (image.isError()) {
                 productImagePreview.setImage(null);
-                imageStatusLabel.setText("Khong doc duoc anh. Hay chon file khac.");
+                imageStatusLabel.setText("Không đọc được ảnh. Hãy chọn file khác.");
                 imagePlaceholderLabel.setVisible(true);
                 return;
             }
 
             productImagePreview.setImage(image);
-            imageStatusLabel.setText("Da chon anh: " + imageFile.getName());
+            imageStatusLabel.setText("Đã chọn ảnh: " + imageFile.getName());
             imagePlaceholderLabel.setVisible(false);
         } catch (Exception e) {
             productImagePreview.setImage(null);
-            imageStatusLabel.setText("Khong mo duoc anh. Hay chon file khac.");
+            imageStatusLabel.setText("Không mở được ảnh. Hãy chọn file khác.");
             imagePlaceholderLabel.setVisible(true);
         }
     }

@@ -37,6 +37,7 @@ public class AuctionNetworkClient {
     private final ConcurrentMap<String, CompletableFuture<Message>> pendingResponses = new ConcurrentHashMap<>();
     private final LinkedBlockingQueue<Message> uncorrelatedResponses = new LinkedBlockingQueue<>();
     private final List<BidUpdateListener> bidUpdateListeners = new CopyOnWriteArrayList<>();
+    private final List<ProductUpdateListener> productUpdateListeners = new CopyOnWriteArrayList<>();
 
     private AuctionNetworkClient() {
     }
@@ -67,7 +68,7 @@ public class AuctionNetworkClient {
 
     public Message sendAndWait(Message message) {
         if (message == null) {
-            return errorMessage("Request khong hop le.");
+            return errorMessage("Request không hợp lệ.");
         }
 
         String requestId = message.getRequestId();
@@ -80,7 +81,7 @@ public class AuctionNetworkClient {
 
         synchronized (this) {
             if (!connect()) {
-                return errorMessage("Khong ket noi duoc server. Hay chay AuctionServer truoc.");
+                return errorMessage("Không kết nối được server. Hãy chạy AuctionServer trước.");
             }
 
             if (out == null) {
@@ -94,7 +95,7 @@ public class AuctionNetworkClient {
             if (out.checkError()) {
                 pendingResponses.remove(requestId);
                 close();
-                return errorMessage("Khong gui duoc request den server.");
+                return errorMessage("Không gửi được request đến server.");
             }
         }
 
@@ -103,7 +104,7 @@ public class AuctionNetworkClient {
         } catch (TimeoutException e) {
             pendingResponses.remove(requestId);
             close();
-            return errorMessage("Server khong phan hoi.");
+            return errorMessage("Server không phản hồi.");
         } catch (InterruptedException e) {
             pendingResponses.remove(requestId);
             Thread.currentThread().interrupt();
@@ -111,7 +112,7 @@ public class AuctionNetworkClient {
         } catch (Exception e) {
             pendingResponses.remove(requestId);
             close();
-            return errorMessage("Loi ket noi server: " + e.getMessage());
+            return errorMessage("Lỗi kết nối server: " + e.getMessage());
         }
     }
 
@@ -125,6 +126,16 @@ public class AuctionNetworkClient {
         bidUpdateListeners.remove(listener);
     }
 
+    public void addProductUpdateListener(ProductUpdateListener listener) {
+        if (listener != null) {
+            productUpdateListeners.add(listener);
+        }
+    }
+
+    public void removeProductUpdateListener(ProductUpdateListener listener) {
+        productUpdateListeners.remove(listener);
+    }
+
     private void startListener() {
         listenerThread = new Thread(() -> {
             try {
@@ -135,6 +146,8 @@ public class AuctionNetworkClient {
 
                     if (message.getType() == MessageType.BID_UPDATE) {
                         notifyBidUpdate(message);
+                    } else if (message.getType() == MessageType.PRODUCT_CHANGED) {
+                        notifyProductChanged(message);
                     } else {
                         completePendingResponse(message);
                     }
@@ -174,6 +187,14 @@ public class AuctionNetworkClient {
         Platform.runLater(() -> {
             for (BidUpdateListener listener : bidUpdateListeners) {
                 listener.onBidUpdate(message);
+            }
+        });
+    }
+
+    private void notifyProductChanged(Message message) {
+        Platform.runLater(() -> {
+            for (ProductUpdateListener listener : productUpdateListeners) {
+                listener.onProductChanged(message);
             }
         });
     }

@@ -18,7 +18,7 @@ public final class FxmlUtil {
         }
 
         if (resource == null) {
-            throw new IllegalStateException("Khong tim thay FXML: " + resourcePath);
+            throw new IllegalStateException("Không tìm thấy FXML: " + resourcePath);
         }
 
         return new FXMLLoader(resource);

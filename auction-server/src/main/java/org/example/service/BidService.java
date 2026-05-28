@@ -1,9 +1,14 @@
 package org.example.service;
 
+import org.example.common.ProductStatus;
 import org.example.database.BidDAO;
 import org.example.database.DatabaseManager;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -17,6 +22,8 @@ public class BidService {
         if (bidderUsername == null || bidderUsername.isBlank()) {
             return BidResult.failure("Không xác định được bidder");
         }
+
+        String normalizedBidderUsername = bidderUsername.trim();
 
         if (!Double.isFinite(bidPrice) || bidPrice <= 0) {
             return BidResult.failure("Giá đặt không hợp lệ");
@@ -35,7 +42,13 @@ public class BidService {
                 return BidResult.failure("Không tìm thấy sản phẩm");
             }
 
-            if (isAuctionClosed(product.status, product.endTime)) {
+            if (product.sellerUsername != null
+                    && product.sellerUsername.equalsIgnoreCase(normalizedBidderUsername)) {
+                conn.rollback();
+                return BidResult.failure("Người bán không thể đặt giá sản phẩm của chính mình !");
+            }
+
+            if (isAuctionFinished(product.status, product.endTime)) {
                 conn.rollback();
                 return BidResult.failure("Phiên đấu giá đã kết thúc");
             }
@@ -60,7 +73,7 @@ public class BidService {
                 newEndTime = product.endTime;
             }
 
-            bidDAO.insertBid(conn, productId, bidderUsername.trim(), bidPrice);
+            bidDAO.insertBid(conn, productId, normalizedBidderUsername, bidPrice);
 
             conn.commit();
 
@@ -76,7 +89,7 @@ public class BidService {
     }
 
     private ProductSnapshot lockProduct(Connection conn, int productId) throws SQLException {
-        String sql = "SELECT current_price, status, start_time, end_time FROM products WHERE id = ? FOR UPDATE";
+        String sql = "SELECT current_price, status, start_time, end_time, seller_username FROM products WHERE id = ? FOR UPDATE";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, productId);
@@ -93,21 +106,15 @@ public class BidService {
                         rs.getDouble("current_price"),
                         rs.getString("status"),
                         startTimestamp == null ? null : startTimestamp.toLocalDateTime(),
-                        endTimestamp == null ? null : endTimestamp.toLocalDateTime()
+                        endTimestamp == null ? null : endTimestamp.toLocalDateTime(),
+                        rs.getString("seller_username")
                 );
             }
         }
     }
 
-    private boolean isAuctionClosed(String status, LocalDateTime endTime) {
-        if ("CLOSED".equalsIgnoreCase(status)
-                || "FINISHED".equalsIgnoreCase(status)
-                || "CANCELED".equalsIgnoreCase(status)
-                || "DELETED".equalsIgnoreCase(status)) {
-            return true;
-        }
-
-        return endTime != null && !endTime.isAfter(LocalDateTime.now());
+    private boolean isAuctionFinished(String status, LocalDateTime endTime) {
+        return ProductStatus.isFinished(status, endTime);
     }
 
     private boolean isAuctionNotStarted(LocalDateTime startTime) {
@@ -151,12 +158,14 @@ public class BidService {
         String status;
         LocalDateTime startTime;
         LocalDateTime endTime;
+        String sellerUsername;
 
-        ProductSnapshot(double currentPrice, String status, LocalDateTime startTime, LocalDateTime endTime) {
+        ProductSnapshot(double currentPrice, String status, LocalDateTime startTime, LocalDateTime endTime, String sellerUsername) {
             this.currentPrice = currentPrice;
             this.status = status;
             this.startTime = startTime;
             this.endTime = endTime;
+            this.sellerUsername = sellerUsername;
         }
     }
 }

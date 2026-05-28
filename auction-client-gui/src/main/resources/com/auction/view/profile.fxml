@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="430.0" prefWidth="500.0" style="-fx-background-color: linear-gradient(to bottom right, #012f2d, #003c3a 58%, #0a5a52);" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.ProfileController">
+    <top>
+        <VBox spacing="8.0" style="-fx-padding: 28 34 12 34;">
+            <children>
+                <Label fx:id="titleLabel" style="-fx-text-fill: #d4af37; -fx-font-size: 28px; -fx-font-weight: 900;" text="My Profile" />
+                <Label fx:id="roleLabel" style="-fx-background-color: rgba(27,191,122,0.16); -fx-background-radius: 999; -fx-border-color: rgba(27,191,122,0.45); -fx-border-radius: 999; -fx-padding: 5 12 5 12; -fx-text-fill: #cde8e6; -fx-font-size: 12px; -fx-font-weight: bold;" text="USER" />
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="22.0" style="-fx-padding: 6 34 22 34;">
+            <children>
+                <GridPane hgap="16.0" style="-fx-background-color: rgba(7, 46, 43, 0.92); -fx-background-radius: 18; -fx-border-color: rgba(212,175,55,0.42); -fx-border-radius: 18; -fx-border-width: 1.2; -fx-padding: 22;" vgap="16.0">
+                    <children>
+                        <Label style="-fx-text-fill: #d4af37; -fx-font-size: 13px; -fx-font-weight: bold;" text="Ten tai khoan" />
+                        <Label fx:id="usernameLabel" maxWidth="Infinity" style="-fx-text-fill: #f8f5ea; -fx-font-size: 16px; -fx-font-weight: bold;" text="-" GridPane.columnIndex="1" />
+
+                        <Label style="-fx-text-fill: #d4af37; -fx-font-size: 13px; -fx-font-weight: bold;" text="Email" GridPane.rowIndex="1" />
+                        <Label fx:id="emailLabel" maxWidth="Infinity" style="-fx-text-fill: #f8f5ea; -fx-font-size: 16px; -fx-font-weight: bold;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                    </children>
+                    <rowConstraints>
+                        <RowConstraints minHeight="42.0" />
+                        <RowConstraints minHeight="42.0" />
+                    </rowConstraints>
+               <columnConstraints>
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+               </columnConstraints>
+                </GridPane>
+
+                <VBox spacing="8.0" style="-fx-background-color: rgba(212,175,55,0.12); -fx-background-radius: 18; -fx-border-color: rgba(212,175,55,0.42); -fx-border-radius: 18; -fx-border-width: 1.2; -fx-padding: 22;">
+                    <children>
+                        <Label fx:id="countTitleLabel" style="-fx-text-fill: #d4af36; -fx-font-size: 14px; -fx-font-weight: bold;" />
+                        <Label fx:id="countValueLabel" style="-fx-text-fill: #ffffff; -fx-font-size: 42px; -fx-font-weight: 900;" text="0" />
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 34 28 34;">
+            <children>
+                <Button onAction="#handleClose" prefHeight="40.0" prefWidth="120.0" style="-fx-background-color: #d4af37; -fx-text-fill: #06211f; -fx-font-weight: bold; -fx-background-radius: 10;" text="Đóng" />
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>

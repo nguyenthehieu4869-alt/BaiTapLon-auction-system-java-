@@ -1,8 +1,14 @@
 package org.example.database;
 
+import org.example.common.ProductStatus;
 import org.example.model.Product;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +21,6 @@ public class ProductDAO {
                 SELECT id, name, description, image_path, start_price, current_price,
                        status, start_time, end_time, seller_username
                 FROM products
-                WHERE status <> 'DELETED'
                 """;
 
       try (Connection conn = DatabaseManager.getConnection();
@@ -28,6 +33,7 @@ public class ProductDAO {
 
       } catch (Exception e) {
          e.printStackTrace();
+         throw new IllegalStateException("Không tải được danh sách sản phẩm từ DB: " + e.getMessage(), e);
       }
 
       return products;
@@ -36,6 +42,8 @@ public class ProductDAO {
    private Product mapProduct(ResultSet rs) throws SQLException {
       Timestamp start = rs.getTimestamp("start_time");
       Timestamp end = rs.getTimestamp("end_time");
+      LocalDateTime startTime = start == null ? null : start.toLocalDateTime();
+      LocalDateTime endTime = end == null ? null : end.toLocalDateTime();
 
       return new Product(
               rs.getInt("id"),
@@ -44,9 +52,9 @@ public class ProductDAO {
               rs.getString("image_path"),
               rs.getDouble("start_price"),
               rs.getDouble("current_price"),
-              rs.getString("status"),
-              start == null ? null : start.toLocalDateTime().toString(),
-              end == null ? null : end.toLocalDateTime().toString(),
+              ProductStatus.current(startTime, endTime, rs.getString("status")),
+              startTime == null ? null : startTime.toString(),
+              endTime == null ? null : endTime.toString(),
               rs.getString("seller_username")
       );
    }
@@ -58,7 +66,7 @@ public class ProductDAO {
             SELECT id, name, description, image_path, start_price, current_price,
                    status, start_time, end_time, seller_username
             FROM products
-            WHERE status <> 'DELETED' AND seller_username = ?
+            WHERE seller_username = ?
             """;
 
       try (Connection conn = DatabaseManager.getConnection();
@@ -74,6 +82,7 @@ public class ProductDAO {
 
       } catch (Exception e) {
          e.printStackTrace();
+         throw new IllegalStateException("Không tải được sản phẩm của seller từ DB: " + e.getMessage(), e);
       }
 
       return products;
@@ -96,7 +105,11 @@ public class ProductDAO {
          ps.setString(3, imagePath);
          ps.setDouble(4, startPrice);
          ps.setDouble(5, startPrice);
-         ps.setString(6, status);
+         ps.setString(6, ProductStatus.current(
+                 startTime == null ? null : startTime.toLocalDateTime(),
+                 endTime == null ? null : endTime.toLocalDateTime(),
+                 status
+         ));
          ps.setTimestamp(7, startTime);
          ps.setTimestamp(8, endTime);
          ps.setString(9, sellerUsername);
@@ -123,7 +136,7 @@ public class ProductDAO {
          ps.setString(1, name);
          ps.setString(2, description);
          ps.setDouble(3, startPrice);
-         ps.setString(4, status);
+         ps.setString(4, ProductStatus.normalize(status));
          ps.setString(5, imagePath);
          ps.setInt(6, id);
 
@@ -136,12 +149,63 @@ public class ProductDAO {
    }
 
    public boolean deleteProduct(int productId) {
-      String sql = "UPDATE products SET status = 'DELETED' WHERE id = ?";
+      Connection conn = null;
+      String deleteBidsSql = "DELETE FROM bids WHERE product_id = ?";
+      String deleteProductSql = "DELETE FROM products WHERE id = ?";
+
+      try {
+         conn = DatabaseManager.getConnection();
+         conn.setAutoCommit(false);
+
+         try (PreparedStatement ps = conn.prepareStatement(deleteBidsSql)) {
+            ps.setInt(1, productId);
+            ps.executeUpdate();
+         }
+
+         int deletedProducts;
+         try (PreparedStatement ps = conn.prepareStatement(deleteProductSql)) {
+            ps.setInt(1, productId);
+            deletedProducts = ps.executeUpdate();
+         }
+
+         conn.commit();
+         return deletedProducts > 0;
+
+      } catch (Exception e) {
+         if (conn != null) {
+            try {
+               conn.rollback();
+            } catch (SQLException ignored) {
+            }
+         }
+         e.printStackTrace();
+         return false;
+      } finally {
+         if (conn != null) {
+            try {
+               conn.close();
+            } catch (SQLException ignored) {
+            }
+         }
+      }
+   }
+
+   public boolean closeAuction(int productId) {
+      String sql = """
+            UPDATE products
+            SET status = ?,
+                end_time = CASE
+                    WHEN end_time IS NULL OR end_time > NOW() THEN NOW()
+                    ELSE end_time
+                END
+            WHERE id = ?
+            """;
 
       try (Connection conn = DatabaseManager.getConnection();
            PreparedStatement ps = conn.prepareStatement(sql)) {
 
-         ps.setInt(1, productId);
+         ps.setString(1, ProductStatus.FINISHED);
+         ps.setInt(2, productId);
          return ps.executeUpdate() > 0;
 
       } catch (Exception e) {
@@ -150,18 +214,28 @@ public class ProductDAO {
       }
    }
 
-   public boolean closeAuction(int productId) {
-      String sql = "UPDATE products SET status = 'CLOSED' WHERE id = ?";
+   public int countProductsBySeller(String sellerUsername) {
+      String sql = """
+            SELECT COUNT(*)
+            FROM products
+            WHERE seller_username = ?
+            """;
 
       try (Connection conn = DatabaseManager.getConnection();
            PreparedStatement ps = conn.prepareStatement(sql)) {
 
-         ps.setInt(1, productId);
-         return ps.executeUpdate() > 0;
+         ps.setString(1, sellerUsername);
+
+         try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+               return rs.getInt(1);
+            }
+         }
 
       } catch (Exception e) {
          e.printStackTrace();
-         return false;
       }
+
+      return 0;
    }
 }

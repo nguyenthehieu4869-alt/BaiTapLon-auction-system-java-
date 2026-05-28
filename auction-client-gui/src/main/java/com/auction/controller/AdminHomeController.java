@@ -1,6 +1,8 @@
 package com.auction.controller;
 
 import com.auction.model.Product;
+import com.auction.network.AuctionNetworkClient;
+import com.auction.network.ProductUpdateListener;
 import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
 import com.auction.util.FxmlUtil;
@@ -17,6 +19,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import org.example.common.ProductStatus;
 
 import java.time.LocalDateTime;
 
@@ -47,18 +50,20 @@ public class AdminHomeController {
     private TableColumn<Product, String> timeLeftColumn;
 
     private final RemoteProductService productService = new RemoteProductService();
+    private final ProductUpdateListener productUpdateListener = message -> loadProducts();
     private Timeline countdownTimeline;
 
     @FXML
     private void initialize() {
         setupTableColumns();
+        AuctionNetworkClient.getInstance().addProductUpdateListener(productUpdateListener);
         loadProducts();
         startCountdownTimer();
     }
 
     public void setUsername(String username) {
         if (welcomeLabel != null) {
-            welcomeLabel.setText("Welcome Admin: " + username);
+            welcomeLabel.setText("Xin chào Admin: " + username);
         }
     }
 
@@ -120,6 +125,7 @@ public class AdminHomeController {
 
     @FXML
     private void handleLogout() {
+        unregisterRealtimeListeners();
         try {
             Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();
             Stage stage = (Stage) welcomeLabel.getScene().getWindow();
@@ -133,15 +139,16 @@ public class AdminHomeController {
         }
     }
 
-    private String getDisplayStatus(Product product) {
-        if (product.getStartTime() != null && product.getStartTime().isAfter(LocalDateTime.now())) {
-            return "COMING SOON";
-        }
+    private void unregisterRealtimeListeners() {
+        AuctionNetworkClient.getInstance().removeProductUpdateListener(productUpdateListener);
 
-        if (isFinishedProduct(product)) {
-            return "FINISHED";
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
         }
-        return product.getStatus();
+    }
+
+    private String getDisplayStatus(Product product) {
+        return ProductStatus.current(product.getStartTime(), product.getEndTime(), product.getStatus());
     }
 
     private String formatTimeLeft(Product product) {
@@ -163,10 +170,6 @@ public class AdminHomeController {
 
         java.time.Duration duration = java.time.Duration.between(LocalDateTime.now(), product.getEndTime());
         return String.format("%02d:%02d:%02d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
-    }
-
-    private boolean isFinishedProduct(Product product) {
-        return product != null && product.getEndTime() != null && !product.getEndTime().isAfter(LocalDateTime.now());
     }
 
     private void startCountdownTimer() {
