@@ -25,6 +25,7 @@ public class AuctionServer {
             Thread discoveryThread =
                     new Thread(discoveryService);
 
+            discoveryThread.setDaemon(true);
             discoveryThread.start();
 
             while (true) {

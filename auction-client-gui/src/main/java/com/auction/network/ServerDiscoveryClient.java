@@ -3,13 +3,15 @@ package com.auction.network;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class ServerDiscoveryClient {
-
-    private static final int DISCOVERY_PORT = 9998;
-    private static final int TIMEOUT = 2000;
 
     private static final String REQUEST =
             "AUCTION_DISCOVER_REQUEST";
@@ -17,35 +19,38 @@ public class ServerDiscoveryClient {
     private static final String RESPONSE_PREFIX =
             "AUCTION_DISCOVER_RESPONSE:";
 
-    public static ServerInfo discoverServer() {
+    public static ServerInfo discoverServer(
+            int discoveryPort,
+            int timeout
+    ) {
 
         try (DatagramSocket socket =
                      new DatagramSocket()) {
 
             socket.setBroadcast(true);
 
-            socket.setSoTimeout(TIMEOUT);
+            socket.setSoTimeout(timeout);
 
             byte[] requestData =
                     REQUEST.getBytes(
                             StandardCharsets.UTF_8
                     );
 
-            DatagramPacket requestPacket =
-                    new DatagramPacket(
-                            requestData,
-                            requestData.length,
-                            InetAddress.getByName(
-                                    "255.255.255.255"
-                            ),
-                            DISCOVERY_PORT
-                    );
-
             System.out.println(
                     "Searching for server..."
             );
 
-            socket.send(requestPacket);
+            for (InetAddress address : getBroadcastAddresses()) {
+                DatagramPacket requestPacket =
+                        new DatagramPacket(
+                                requestData,
+                                requestData.length,
+                                address,
+                                discoveryPort
+                        );
+
+                socket.send(requestPacket);
+            }
 
             byte[] buffer =
                     new byte[1024];
@@ -111,6 +116,44 @@ public class ServerDiscoveryClient {
         }
 
         return null;
+    }
+
+    private static Set<InetAddress> getBroadcastAddresses()
+            throws Exception {
+
+        Set<InetAddress> addresses =
+                new LinkedHashSet<>();
+
+        addresses.add(
+                InetAddress.getByName(
+                        "255.255.255.255"
+                )
+        );
+
+        Enumeration<NetworkInterface> interfaces =
+                NetworkInterface.getNetworkInterfaces();
+
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface networkInterface =
+                    interfaces.nextElement();
+
+            if (!networkInterface.isUp()
+                    || networkInterface.isLoopback()) {
+                continue;
+            }
+
+            for (InterfaceAddress interfaceAddress
+                    : networkInterface.getInterfaceAddresses()) {
+                InetAddress broadcast =
+                        interfaceAddress.getBroadcast();
+
+                if (broadcast != null) {
+                    addresses.add(broadcast);
+                }
+            }
+        }
+
+        return addresses;
     }
 
     public static class ServerInfo {

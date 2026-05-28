@@ -41,6 +41,29 @@ public class AuctionNetworkClient {
                     9999
             );
 
+    private static final boolean DISCOVERY_ENABLED =
+            Boolean.parseBoolean(
+                    getConfig(
+                            "server.discovery.enabled",
+                            "AUCTION_SERVER_DISCOVERY_ENABLED",
+                            "true"
+                    )
+            );
+
+    private static final int DISCOVERY_PORT =
+            getIntConfig(
+                    "server.discovery.port",
+                    "AUCTION_SERVER_DISCOVERY_PORT",
+                    9998
+            );
+
+    private static final int DISCOVERY_TIMEOUT_MS =
+            getIntConfig(
+                    "server.discovery.timeout.ms",
+                    "AUCTION_SERVER_DISCOVERY_TIMEOUT_MS",
+                    1500
+            );
+
     private static final AuctionNetworkClient INSTANCE =
             new AuctionNetworkClient();
 
@@ -77,6 +100,11 @@ public class AuctionNetworkClient {
 
         close();
 
+        if (DISCOVERY_ENABLED
+                && tryDiscoveryConnect()) {
+            return true;
+        }
+
         try {
 
             System.out.println(
@@ -112,10 +140,12 @@ public class AuctionNetworkClient {
         } catch (Exception e) {
 
             System.out.println(
-                    "Config failed -> trying discovery..."
+                    "Config connection failed"
             );
 
-            return tryDiscoveryConnect();
+            close();
+
+            return false;
         }
     }
     private boolean tryDiscoveryConnect() {
@@ -123,7 +153,10 @@ public class AuctionNetworkClient {
         try {
 
             ServerDiscoveryClient.ServerInfo serverInfo =
-                    ServerDiscoveryClient.discoverServer();
+                    ServerDiscoveryClient.discoverServer(
+                            DISCOVERY_PORT,
+                            DISCOVERY_TIMEOUT_MS
+                    );
 
             if (serverInfo == null) {
 
