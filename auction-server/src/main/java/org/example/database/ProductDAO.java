@@ -10,12 +10,13 @@ public class ProductDAO {
 
    public List<Product> getAllProducts() {
       List<Product> products = new ArrayList<>();
+      refreshAuctionStatuses();
 
       String sql = """
                 SELECT id, name, description, image_path, start_price, current_price,
                        status, start_time, end_time, seller_username
                 FROM products
-                WHERE status <> 'DELETED'
+                WHERE status NOT IN ('DELETED', 'CANCELED')
                 """;
 
       try (Connection conn = DatabaseManager.getConnection();
@@ -53,12 +54,13 @@ public class ProductDAO {
 
    public List<Product> getProductsBySeller(String sellerUsername) {
       List<Product> products = new ArrayList<>();
+      refreshAuctionStatuses();
 
       String sql = """
             SELECT id, name, description, image_path, start_price, current_price,
                    status, start_time, end_time, seller_username
             FROM products
-            WHERE status <> 'DELETED' AND seller_username = ?
+            WHERE status NOT IN ('DELETED', 'CANCELED') AND seller_username = ?
             """;
 
       try (Connection conn = DatabaseManager.getConnection();
@@ -136,7 +138,7 @@ public class ProductDAO {
    }
 
    public boolean deleteProduct(int productId) {
-      String sql = "UPDATE products SET status = 'DELETED' WHERE id = ?";
+      String sql = "UPDATE products SET status = 'CANCELED' WHERE id = ?";
 
       try (Connection conn = DatabaseManager.getConnection();
            PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -151,7 +153,7 @@ public class ProductDAO {
    }
 
    public boolean closeAuction(int productId) {
-      String sql = "UPDATE products SET status = 'CLOSED' WHERE id = ?";
+      String sql = "UPDATE products SET status = 'FINISHED' WHERE id = ?";
 
       try (Connection conn = DatabaseManager.getConnection();
            PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -162,6 +164,39 @@ public class ProductDAO {
       } catch (Exception e) {
          e.printStackTrace();
          return false;
+      }
+   }
+
+   public int refreshAuctionStatuses() {
+      String startRunningSql = """
+            UPDATE products
+            SET status = 'RUNNING'
+            WHERE status = 'OPEN'
+              AND start_time IS NOT NULL
+              AND end_time IS NOT NULL
+              AND start_time <= NOW()
+              AND end_time > NOW()
+            """;
+
+      String finishSql = """
+            UPDATE products
+            SET status = 'FINISHED'
+            WHERE status IN ('OPEN', 'RUNNING')
+              AND end_time IS NOT NULL
+              AND end_time <= NOW()
+            """;
+
+      try (Connection conn = DatabaseManager.getConnection();
+           PreparedStatement startRunning = conn.prepareStatement(startRunningSql);
+           PreparedStatement finish = conn.prepareStatement(finishSql)) {
+
+         int changed = startRunning.executeUpdate();
+         changed += finish.executeUpdate();
+         return changed;
+
+      } catch (Exception e) {
+         e.printStackTrace();
+         return 0;
       }
    }
 }

@@ -25,6 +25,7 @@
                     <children>
                         <Button onAction="#handleAddProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #1bbf7a; -fx-text-fill: white; -fx-background-radius: 10;" text="Thêm sản phẩm" />
                         <Button onAction="#handleEditProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #2f81f7; -fx-text-fill: white; -fx-background-radius: 10;" text="Edit " />
+                        <Button onAction="#handleDeleteProduct" prefWidth="132.0" style="-fx-font-weight: bold; -fx-background-color: #c73b10; -fx-text-fill: white; -fx-background-radius: 10;" text="Xoa" />
                         <Region HBox.hgrow="ALWAYS" />
                         <Button onAction="#handleRefresh" prefWidth="110.0" style="-fx-font-weight: bold; -fx-background-color: #4dd4a5; -fx-text-fill: #06211f; -fx-background-radius: 10;" text="Tải lại" />
                     </children>

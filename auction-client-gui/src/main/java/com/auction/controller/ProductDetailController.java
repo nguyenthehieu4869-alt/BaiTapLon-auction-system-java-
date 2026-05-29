@@ -2,6 +2,8 @@ package com.auction.controller;
 
 import com.auction.service.BidResult;
 import com.auction.model.Product;
+import com.auction.network.AuctionNetworkClient;
+import com.auction.network.BidUpdateListener;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.Label;
@@ -19,9 +21,11 @@ import com.auction.util.AlertUtil;
 import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
 import com.auction.service.remote.RemoteBidService;
+import org.example.network.protocol.Message;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class ProductDetailController {
 
@@ -64,8 +68,14 @@ public class ProductDetailController {
     private Product product;
 
     private final RemoteBidService bidService = new RemoteBidService();
+    private final BidUpdateListener bidUpdateListener = this::handleBidUpdate;
 
     private String username;
+
+    @FXML
+    private void initialize() {
+        AuctionNetworkClient.getInstance().addBidUpdateListener(bidUpdateListener);
+    }
 
     public void setUsername(String username) {
         this.username = username;
@@ -108,6 +118,8 @@ public class ProductDetailController {
 
     @FXML
     private void handleBack(){
+        AuctionNetworkClient.getInstance().removeBidUpdateListener(bidUpdateListener);
+
         try {
             FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/home.fxml");
 
@@ -155,6 +167,38 @@ public class ProductDetailController {
 
         bidTimeColumn.setCellValueFactory(new PropertyValueFactory<>("bidTime"));
 
+        loadBidHistory();
+        updateBidControls();
+    }
+
+    private void handleBidUpdate(Message message) {
+        if (product == null || message == null || message.getData() == null) {
+            return;
+        }
+
+        if (!(message.getData() instanceof Map<?, ?> data)) {
+            return;
+        }
+
+        Object productIdObj = data.get("productId");
+        Object currentPriceObj = data.get("currentPrice");
+
+        if (!(productIdObj instanceof Number productIdNumber)
+                || productIdNumber.intValue() != product.getId()) {
+            return;
+        }
+
+        if (currentPriceObj instanceof Number currentPriceNumber) {
+            product.setCurrentPrice(currentPriceNumber.doubleValue());
+            currentPriceLabel.setText(PriceFormatter.formatVND(product.getCurrentPrice()));
+        }
+
+        Object endTimeObj = data.get("endTime");
+        if (endTimeObj instanceof String endTimeText && !endTimeText.isBlank()) {
+            product.setEndTime(LocalDateTime.parse(endTimeText));
+        }
+
+        statusLabel.setText("Status: " + getDisplayStatus());
         loadBidHistory();
         updateBidControls();
     }

@@ -4,8 +4,11 @@ import org.example.database.BidDAO;
 import org.example.database.ProductDAO;
 import org.example.database.UserDAO;
 import org.example.model.Product;
+import org.example.model.User;
+import org.example.model.UserRole;
 import org.example.network.dto.BidRequest;
 import org.example.network.dto.LoginRequest;
+import org.example.network.dto.LoginResponse;
 import org.example.network.dto.ProductSaveRequest;
 import org.example.network.dto.RegisterRequest;
 import org.example.network.protocol.Message;
@@ -25,6 +28,8 @@ import java.util.Map;
 public class MessageHandler {
 
     private final PrintWriter out;
+    private String currentUsername;
+    private UserRole currentRole;
 
     public MessageHandler(PrintWriter out) {
         this.out = out;
@@ -98,11 +103,17 @@ public class MessageHandler {
         LoginRequest request = parseData(msg, LoginRequest.class);
 
         UserDAO dao = new UserDAO();
-        boolean result = dao.login(request.getUsername(), request.getPassword());
+        User user = dao.findByCredentials(request.getUsername(), request.getPassword());
+        boolean result = user != null;
+
+        if (result) {
+            currentUsername = user.getUsername();
+            currentRole = user.getRole();
+        }
 
         send(msg, new Message(
                 result ? MessageType.LOGIN_SUCCESS : MessageType.LOGIN_FAIL,
-                null,
+                result ? new LoginResponse(user.getUsername(), user.getRole().name()) : null,
                 result,
                 result ? "Đăng nhập thành công" : "Sai tài khoản hoặc mật khẩu! "
         ));
@@ -115,7 +126,8 @@ public class MessageHandler {
         boolean result = dao.register(
                 request.getUsername(),
                 request.getEmail(),
-                request.getPassword()
+                request.getPassword(),
+                request.getRole()
         );
 
         send(msg, new Message(
@@ -139,12 +151,19 @@ public class MessageHandler {
     }
 
     private void handlePlaceBid(Message msg) {
+        requireRole(UserRole.BIDDER);
+
         BidRequest request = parseData(msg, BidRequest.class);
+        if (request.getBidderUsername() != null
+                && !request.getBidderUsername().isBlank()
+                && !currentUsername.equals(request.getBidderUsername())) {
+            throw new IllegalArgumentException("Bidder khong khop voi tai khoan dang nhap");
+        }
 
         BidService service = new BidService();
         BidResult result = service.placeBid(
                 request.getProductId(),
-                request.getBidderUsername(),
+                currentUsername,
                 request.getBidPrice()
         );
 
@@ -160,7 +179,7 @@ public class MessageHandler {
 
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("productId", request.getProductId());
-        updateData.put("bidderUsername", request.getBidderUsername());
+        updateData.put("bidderUsername", currentUsername);
         updateData.put("currentPrice", result.getCurrentPrice());
         updateData.put("endTime", result.getEndTime() == null ? null : result.getEndTime().toString());
 
@@ -180,8 +199,13 @@ public class MessageHandler {
     }
 
     private void handleGetProductsBySeller(Message msg) {
+        requireRole(UserRole.SELLER, UserRole.ADMIN);
+
         Map<?, ?> data = getDataMap(msg);
         String sellerUsername = getString(data, "sellerUsername");
+        if (currentRole == UserRole.SELLER) {
+            sellerUsername = currentUsername;
+        }
 
         ProductDAO dao = new ProductDAO();
         List<Product> products = dao.getProductsBySeller(sellerUsername);
@@ -195,10 +219,17 @@ public class MessageHandler {
     }
 
     private void handleAddProduct(Message msg) {
+        requireRole(UserRole.SELLER, UserRole.ADMIN);
+
         ProductSaveRequest request = parseData(msg, ProductSaveRequest.class);
 
         LocalDateTime startTime = parseDateTime(request.getStartTime(), "Thieu thoi diem bat dau");
         LocalDateTime endTime = parseDateTime(request.getEndTime(), "Thieu thoi diem ket thuc");
+        String sellerUsername = currentRole == UserRole.ADMIN ? request.getSellerUsername() : currentUsername;
+
+        if (sellerUsername == null || sellerUsername.isBlank()) {
+            sellerUsername = currentUsername;
+        }
 
         if (!endTime.isAfter(startTime)) {
             throw new IllegalArgumentException("Thoi diem ket thuc phai sau thoi diem bat dau");
@@ -214,10 +245,10 @@ public class MessageHandler {
                 request.getDescription(),
                 request.getImagePath(),
                 request.getStartPrice(),
-                startTime.isAfter(LocalDateTime.now()) ? "COMING SOON" : "OPEN",
+                startTime.isAfter(LocalDateTime.now()) ? "OPEN" : "RUNNING",
                 Timestamp.valueOf(startTime),
                 Timestamp.valueOf(endTime),
-                request.getSellerUsername()
+                sellerUsername
         );
 
         send(msg, new Message(
@@ -237,6 +268,8 @@ public class MessageHandler {
     }
 
     private void handleEditProduct(Message msg) {
+        requireRole(UserRole.SELLER, UserRole.ADMIN);
+
         ProductSaveRequest request = parseData(msg, ProductSaveRequest.class);
 
         ProductDAO dao = new ProductDAO();
@@ -258,6 +291,8 @@ public class MessageHandler {
     }
 
     private void handleDeleteProduct(Message msg) {
+        requireRole(UserRole.SELLER, UserRole.ADMIN);
+
         Map<?, ?> data = getDataMap(msg);
         int productId = getInt(data, "productId");
 
@@ -273,6 +308,8 @@ public class MessageHandler {
     }
 
     private void handleCloseAuction(Message msg) {
+        requireRole(UserRole.SELLER, UserRole.ADMIN);
+
         Map<?, ?> data = getDataMap(msg);
         int productId = getInt(data, "productId");
 
@@ -377,5 +414,19 @@ public class MessageHandler {
         if (out != null) {
             out.println(Protocol.encode(response));
         }
+    }
+
+    private void requireRole(UserRole... allowedRoles) {
+        if (currentUsername == null || currentRole == null) {
+            throw new IllegalArgumentException("Vui long dang nhap truoc");
+        }
+
+        for (UserRole allowedRole : allowedRoles) {
+            if (currentRole == allowedRole) {
+                return;
+            }
+        }
+
+        throw new IllegalArgumentException("Tai khoan khong co quyen thuc hien chuc nang nay");
     }
 }

@@ -48,6 +48,7 @@ public class LoginController {
             RoleSelectionController controller = loader.getController();
             controller.setUsername(user);
             controller.setPassword(password);
+            controller.setRole(loginResult.getRole());
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setMaximized(false);

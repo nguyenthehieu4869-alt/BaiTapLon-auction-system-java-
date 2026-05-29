@@ -6,7 +6,8 @@ CREATE TABLE users (
                        id INT AUTO_INCREMENT PRIMARY KEY,
                        username VARCHAR(50) NOT NULL UNIQUE,
                        email VARCHAR(100) NOT NULL UNIQUE,
-                       password VARCHAR(100) NOT NULL
+                       password VARCHAR(100) NOT NULL,
+                       role VARCHAR(20) NOT NULL DEFAULT 'BIDDER'
 );
 
 CREATE TABLE products (
@@ -31,11 +32,14 @@ CREATE TABLE bids (
                       FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
-INSERT INTO users (username, email, password)
+INSERT INTO users (username, email, password, role)
 VALUES
-    ('seller1', 'seller1@gmail.com', '123456'),
-    ('seller2', 'seller2@gmail.com', '123456'),
-    ('bidder1', 'bidder1@gmail.com', '123456');
+    ('seller1', 'seller1@gmail.com', '123456', 'SELLER'),
+    ('seller2', 'seller2@gmail.com', '123456', 'SELLER'),
+    ('bidder1', 'bidder1@gmail.com', '123456', 'BIDDER'),
+    ('huy', 'huy@gmail.com', '123456', 'ADMIN'),
+    ('hieu', 'hieu@gmail.com', '123456', 'ADMIN'),
+    ('kien', 'kien@gmail.com', '123456', 'ADMIN');
 
 INSERT INTO products (name, description, start_price, current_price, status, start_time, end_time, seller_username)
 VALUES

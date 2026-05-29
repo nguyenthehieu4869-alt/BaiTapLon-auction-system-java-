@@ -23,14 +23,11 @@ public class RoleSelectionController {
 
     private String username;
     private String password;
+    private String role;
 
     private static final String HOME_FXML = "/com/auction/view/home.fxml";
     private static final String SELLER_HOME_FXML = "/com/auction/view/seller_home.fxml";
     private static final String ADMIN_HOME_FXML = "/com/auction/view/admin_home.fxml";
-    private static final String AUTHORIZED_ADMIN_USERNAME = "huy";
-    private static final String AUTHORIZED_ADMIN_USERNAME_2 = "hieu";
-    private static final String AUTHORIZED_ADMIN_USERNAME_3 = "kien";
-    private static final String AUTHORIZED_ADMIN_PASSWORD = "123456";
 
     @FXML
     private void initialize() {
@@ -45,6 +42,8 @@ public class RoleSelectionController {
         if (adminButton != null) {
             adminButton.setOnAction(this::handleAdmin);
         }
+
+        updateAvailableRoles();
     }
 
     public void setUsername(String username) {
@@ -55,19 +54,34 @@ public class RoleSelectionController {
         this.password = password;
     }
 
+    public void setRole(String role) {
+        this.role = normalizeRole(role);
+        updateAvailableRoles();
+    }
+
     @FXML
     private void handleBidder(ActionEvent event) {
+        if (!hasRole("BIDDER")) {
+            AlertUtil.showError("Tai khoan nay khong co quyen BIDDER!");
+            return;
+        }
+
         switchScene(event, HOME_FXML);
     }
 
     @FXML
     private void handleSeller(ActionEvent event) {
+        if (!hasRole("SELLER")) {
+            AlertUtil.showError("Tai khoan nay khong co quyen SELLER!");
+            return;
+        }
+
         switchScene(event, SELLER_HOME_FXML);
     }
 
     @FXML
     private void handleAdmin(ActionEvent event) {
-        if (!isAuthorizedAdmin()) {
+        if (!hasRole("ADMIN")) {
             AlertUtil.showError("Tai khoan nay khong co quyen ADMIN!");
             return;
         }
@@ -105,10 +119,22 @@ public class RoleSelectionController {
         }
     }
 
-    private boolean isAuthorizedAdmin() {
-        return AUTHORIZED_ADMIN_PASSWORD.equals(password)
-                && (AUTHORIZED_ADMIN_USERNAME.equals(username)
-                || AUTHORIZED_ADMIN_USERNAME_2.equals(username)
-                || AUTHORIZED_ADMIN_USERNAME_3.equals(username));
+    private boolean hasRole(String expectedRole) {
+        return expectedRole.equals(normalizeRole(role));
+    }
+
+    private String normalizeRole(String role) {
+        return role == null || role.isBlank() ? "BIDDER" : role.trim().toUpperCase();
+    }
+
+    private void updateAvailableRoles() {
+        if (bidderButton == null || sellerButton == null || adminButton == null) {
+            return;
+        }
+
+        String normalizedRole = normalizeRole(role);
+        bidderButton.setDisable(!"BIDDER".equals(normalizedRole));
+        sellerButton.setDisable(!"SELLER".equals(normalizedRole));
+        adminButton.setDisable(!"ADMIN".equals(normalizedRole));
     }
 }

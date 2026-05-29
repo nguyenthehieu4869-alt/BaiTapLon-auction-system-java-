@@ -1,18 +1,38 @@
 package org.example.model;
 
-public class User {
+public abstract class User extends Entity {
 
-    private int id;
-    private String username;
-    private String password;
+    private final String username;
+    private final String password;
+    private final String email;
+    private final UserRole role;
 
-    public User(int id, String username, String password) {
-        this.id = id;
+    protected User(int id, String username, String password, String email, UserRole role) {
+        super(id);
         this.username = username;
         this.password = password;
+        this.email = email;
+        this.role = role;
     }
 
-    public int getId() { return id; }
-    public String getUsername() { return username; }
-    public String getPassword() { return password; }
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    @Override
+    public String printInfo() {
+        return role + ": " + username;
+    }
 }

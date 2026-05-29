@@ -287,10 +287,15 @@ public class HomeController {
             return "COMING SOON";
         }
 
+        String status = product.getStatus();
+        if ("CANCELED".equalsIgnoreCase(status) || "DELETED".equalsIgnoreCase(status)) {
+            return "CANCELED";
+        }
+
         String leaderUsername = getCachedLeaderUsername(product.getId());
 
-        if (product.getEndTime() != null &&
-                !product.getEndTime().isAfter(now)) {
+        if ("FINISHED".equalsIgnoreCase(status)
+                || (product.getEndTime() != null && !product.getEndTime().isAfter(now))) {
             return leaderUsername == null || leaderUsername.isBlank()
                     ? "FINISHED"
                     : "FINISHED - Winner: " + leaderUsername;
@@ -379,10 +384,11 @@ public class HomeController {
         String status = product.getStatus();
         return status != null
                 && !status.equalsIgnoreCase("DELETED")
+                && !status.equalsIgnoreCase("CANCELED")
+                && !status.equalsIgnoreCase("FINISHED")
                 && !status.equalsIgnoreCase("CLOSED");
     }
 
 }
-
 
 

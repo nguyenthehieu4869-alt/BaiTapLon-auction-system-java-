@@ -248,6 +248,29 @@ public class SellerHomeController {
     }
 
     @FXML
+    private void handleDeleteProduct() {
+        Product selectedProduct = productTable.getSelectionModel().getSelectedItem();
+
+        if (selectedProduct == null) {
+            AlertUtil.showError("Vui lòng chọn sản phẩm cần xoá!");
+            return;
+        }
+
+        if (!AlertUtil.showConfirm(
+                "Xác nhận xoá",
+                "Bạn có muốn xoá sản phẩm: " + selectedProduct.getName() + "?")) {
+            return;
+        }
+
+        if (productService.deleteProduct(selectedProduct.getId())) {
+            AlertUtil.showInfo("Xoá sản phẩm thành công");
+            loadProducts();
+        } else {
+            AlertUtil.showError("Xoá sản phẩm thất bại");
+        }
+    }
+
+    @FXML
     private void handleLogout(ActionEvent event) {
         try {
             Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();

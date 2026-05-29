@@ -53,7 +53,7 @@ public class BidDAO {
     }
 
     public void updateCurrentPrice(Connection conn, int productId, double bidPrice) throws SQLException {
-        String sql = "UPDATE products SET current_price = ? WHERE id = ?";
+        String sql = "UPDATE products SET current_price = ?, status = 'RUNNING' WHERE id = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDouble(1, bidPrice);

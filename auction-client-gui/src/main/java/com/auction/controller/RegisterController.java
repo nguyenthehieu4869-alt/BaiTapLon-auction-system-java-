@@ -22,10 +22,20 @@ public class RegisterController {
     private PasswordField passwordField;
 
     @FXML
+    private ComboBox<String> roleComboBox;
+
+    @FXML
+    private void initialize() {
+        roleComboBox.getItems().setAll("BIDDER", "SELLER");
+        roleComboBox.getSelectionModel().select("BIDDER");
+    }
+
+    @FXML
     private void handleRegister() {
         String username = usernameField.getText().trim();
         String email = emailField.getText().trim();
         String password = passwordField.getText();
+        String role = roleComboBox.getValue();
 
         if (username.isEmpty()) {
             AlertUtil.showError("Vui lòng nhập username");
@@ -54,7 +64,7 @@ public class RegisterController {
 
         RemoteUserService userService = new RemoteUserService();
 
-        RemoteUserService.AuthResult registerResult = userService.registerAccount(username, email, password);
+        RemoteUserService.AuthResult registerResult = userService.registerAccount(username, email, password, role);
 
         if (registerResult.isSuccess()) {
             AlertUtil.showInfo("Đăng ký thành công!");
