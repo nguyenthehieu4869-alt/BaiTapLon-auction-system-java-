@@ -1,5 +1,6 @@
 package org.example.server.handler;
 
+import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 import org.example.database.BidDAO;
 import org.example.database.ProductDAO;
@@ -18,7 +19,6 @@ import org.example.service.BidResult;
 import org.example.service.BidService;
 
 import java.io.PrintWriter;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -200,6 +200,7 @@ public class MessageHandler {
 
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("productId", request.getProductId());
+        updateData.put("productName", result.getProductName());
         updateData.put("bidderUsername", request.getBidderUsername());
         updateData.put("currentPrice", result.getCurrentPrice());
         updateData.put("endTime", result.getEndTime() == null ? null : result.getEndTime().toString());
@@ -239,7 +240,7 @@ public class MessageHandler {
 
         LocalDateTime startTime = parseDateTime(request.getStartTime(), "Thiếu thời điểm bắt đầu");
         LocalDateTime endTime = parseDateTime(request.getEndTime(), "Thiếu thời điểm kết thúc");
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = AuctionTime.now();
 
         if (!startTime.isAfter(now)) {
             throw new IllegalArgumentException("Thời điểm bắt đầu phải sau thời điểm hiện tại");
@@ -260,8 +261,8 @@ public class MessageHandler {
                 request.getImagePath(),
                 request.getStartPrice(),
                 ProductStatus.COMING_SOON,
-                Timestamp.valueOf(startTime),
-                Timestamp.valueOf(endTime),
+                startTime,
+                endTime,
                 request.getSellerUsername()
         );
 

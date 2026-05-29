@@ -11,13 +11,15 @@ public final class ProductStatus {
     }
 
     public static String current(LocalDateTime startTime, LocalDateTime endTime, String storedStatus) {
+        return current(startTime, endTime, storedStatus, AuctionTime.now());
+    }
+
+    public static String current(LocalDateTime startTime, LocalDateTime endTime, String storedStatus, LocalDateTime now) {
         String normalizedStatus = normalizeOrNull(storedStatus);
 
         if (FINISHED.equals(normalizedStatus)) {
             return FINISHED;
         }
-
-        LocalDateTime now = LocalDateTime.now();
 
         if (startTime != null && startTime.isAfter(now)) {
             return COMING_SOON;
@@ -31,8 +33,12 @@ public final class ProductStatus {
     }
 
     public static boolean isFinished(String status, LocalDateTime endTime) {
+        return isFinished(status, endTime, AuctionTime.now());
+    }
+
+    public static boolean isFinished(String status, LocalDateTime endTime, LocalDateTime now) {
         return FINISHED.equals(normalizeOrNull(status))
-                || (endTime != null && !endTime.isAfter(LocalDateTime.now()));
+                || (endTime != null && !endTime.isAfter(now));
     }
 
     public static String normalize(String status) {

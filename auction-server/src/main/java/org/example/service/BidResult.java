@@ -7,12 +7,14 @@ public class BidResult {
     private final String message;
     private final double currentPrice;
     private final LocalDateTime endTime;
+    private final String productName;
 
-    public BidResult(boolean success, String message, double currentPrice, LocalDateTime endTime) {
+    public BidResult(boolean success, String message, double currentPrice, LocalDateTime endTime, String productName) {
         this.success = success;
         this.message = message;
         this.currentPrice = currentPrice;
         this.endTime = endTime;
+        this.productName = productName;
     }
 
     public boolean isSuccess() {
@@ -31,11 +33,15 @@ public class BidResult {
         return endTime;
     }
 
-    public static BidResult failure(String message) {
-        return new BidResult(false, message, 0, null);
+    public String getProductName() {
+        return productName;
     }
 
-    public static BidResult success(String message, double currentPrice, LocalDateTime endTime) {
-        return new BidResult(true, message, currentPrice, endTime);
+    public static BidResult failure(String message) {
+        return new BidResult(false, message, 0, null, null);
+    }
+
+    public static BidResult success(String message, double currentPrice, LocalDateTime endTime, String productName) {
+        return new BidResult(true, message, currentPrice, endTime, productName);
     }
 }

@@ -5,8 +5,14 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.example.common.AuctionTime;
 
 public class AuctionApplication extends Application {
+
+    @Override
+    public void init() {
+        AuctionTime.installAsDefaultTimeZone();
+    }
 
     @Override
     public void start(Stage stage) throws Exception {

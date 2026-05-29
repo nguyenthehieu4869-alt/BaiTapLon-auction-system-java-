@@ -8,6 +8,7 @@ import com.auction.network.ProductUpdateListener;
 import com.auction.service.remote.RemoteBidService;
 import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
+import com.auction.util.BidNotificationUtil;
 import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
 import javafx.animation.KeyFrame;
@@ -24,6 +25,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 
 import java.time.LocalDateTime;
@@ -214,6 +216,12 @@ public class HomeController {
             return;
         }
 
+        BidNotificationUtil.showBidNotification(
+                productTable.getScene() == null ? null : productTable.getScene().getWindow(),
+                username,
+                message
+        );
+
         Object dataObj = message.getData();
         if (!(dataObj instanceof Map<?, ?> data)) {
             return;
@@ -267,8 +275,8 @@ public class HomeController {
             Parent root = loader.load();
 
             ProductDetailController controller = loader.getController();
-            controller.setProduct(selectedProduct);
             controller.setUsername(username);
+            controller.setProduct(selectedProduct);
 
 
             Stage stage = (Stage) productTable.getScene().getWindow();
@@ -316,7 +324,7 @@ public class HomeController {
             return "N/A";
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = AuctionTime.now();
 
         if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
             java.time.Duration duration =
@@ -429,7 +437,7 @@ public class HomeController {
             return false;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = AuctionTime.now();
 
         if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
             return false;

@@ -1,5 +1,6 @@
 package org.example.database;
 
+import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 import org.example.model.Product;
 
@@ -7,7 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,10 +40,8 @@ public class ProductDAO {
    }
 
    private Product mapProduct(ResultSet rs) throws SQLException {
-      Timestamp start = rs.getTimestamp("start_time");
-      Timestamp end = rs.getTimestamp("end_time");
-      LocalDateTime startTime = start == null ? null : start.toLocalDateTime();
-      LocalDateTime endTime = end == null ? null : end.toLocalDateTime();
+      LocalDateTime startTime = rs.getObject("start_time", LocalDateTime.class);
+      LocalDateTime endTime = rs.getObject("end_time", LocalDateTime.class);
 
       return new Product(
               rs.getInt("id"),
@@ -89,8 +87,8 @@ public class ProductDAO {
    }
 
    public boolean addProduct(String name, String description, String imagePath,
-                             double startPrice, String status, Timestamp startTime,
-                             Timestamp endTime, String sellerUsername) {
+                             double startPrice, String status, LocalDateTime startTime,
+                             LocalDateTime endTime, String sellerUsername) {
       String sql = """
             INSERT INTO products
             (name, description, image_path, start_price, current_price, status, start_time, end_time, seller_username)
@@ -105,13 +103,9 @@ public class ProductDAO {
          ps.setString(3, imagePath);
          ps.setDouble(4, startPrice);
          ps.setDouble(5, startPrice);
-         ps.setString(6, ProductStatus.current(
-                 startTime == null ? null : startTime.toLocalDateTime(),
-                 endTime == null ? null : endTime.toLocalDateTime(),
-                 status
-         ));
-         ps.setTimestamp(7, startTime);
-         ps.setTimestamp(8, endTime);
+         ps.setString(6, ProductStatus.current(startTime, endTime, status));
+         ps.setObject(7, startTime);
+         ps.setObject(8, endTime);
          ps.setString(9, sellerUsername);
 
          return ps.executeUpdate() > 0;
@@ -195,7 +189,7 @@ public class ProductDAO {
             UPDATE products
             SET status = ?,
                 end_time = CASE
-                    WHEN end_time IS NULL OR end_time > NOW() THEN NOW()
+                    WHEN end_time IS NULL OR end_time > ? THEN ?
                     ELSE end_time
                 END
             WHERE id = ?
@@ -204,8 +198,11 @@ public class ProductDAO {
       try (Connection conn = DatabaseManager.getConnection();
            PreparedStatement ps = conn.prepareStatement(sql)) {
 
+         LocalDateTime now = AuctionTime.now();
          ps.setString(1, ProductStatus.FINISHED);
-         ps.setInt(2, productId);
+         ps.setObject(2, now);
+         ps.setObject(3, now);
+         ps.setInt(4, productId);
          return ps.executeUpdate() > 0;
 
       } catch (Exception e) {

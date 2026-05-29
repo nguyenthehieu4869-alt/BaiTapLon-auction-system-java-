@@ -8,15 +8,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ProductStatusTest {
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 5, 29, 12, 0);
 
     @Test
     void currentReturnsComingSoonWhenStartTimeIsInFuture() {
-        LocalDateTime now = LocalDateTime.now();
-
         String status = ProductStatus.current(
-                now.plusMinutes(10),
-                now.plusHours(1),
-                ProductStatus.OPENING
+                NOW.plusMinutes(10),
+                NOW.plusHours(1),
+                ProductStatus.OPENING,
+                NOW
         );
 
         assertEquals(ProductStatus.COMING_SOON, status);
@@ -24,12 +24,11 @@ class ProductStatusTest {
 
     @Test
     void currentReturnsFinishedWhenEndTimeHasPassed() {
-        LocalDateTime now = LocalDateTime.now();
-
         String status = ProductStatus.current(
-                now.minusHours(2),
-                now.minusMinutes(1),
-                ProductStatus.OPENING
+                NOW.minusHours(2),
+                NOW.minusMinutes(1),
+                ProductStatus.OPENING,
+                NOW
         );
 
         assertEquals(ProductStatus.FINISHED, status);
@@ -37,12 +36,11 @@ class ProductStatusTest {
 
     @Test
     void currentPreservesFinishedStatus() {
-        LocalDateTime now = LocalDateTime.now();
-
         String status = ProductStatus.current(
-                now.minusMinutes(10),
-                now.plusHours(1),
-                ProductStatus.FINISHED
+                NOW.minusMinutes(10),
+                NOW.plusHours(1),
+                ProductStatus.FINISHED,
+                NOW
         );
 
         assertEquals(ProductStatus.FINISHED, status);
@@ -50,12 +48,11 @@ class ProductStatusTest {
 
     @Test
     void currentReturnsOpeningForActiveAuction() {
-        LocalDateTime now = LocalDateTime.now();
-
         String status = ProductStatus.current(
-                now.minusMinutes(10),
-                now.plusHours(1),
-                ProductStatus.COMING_SOON
+                NOW.minusMinutes(10),
+                NOW.plusHours(1),
+                ProductStatus.COMING_SOON,
+                NOW
         );
 
         assertEquals(ProductStatus.OPENING, status);
@@ -63,12 +60,11 @@ class ProductStatusTest {
 
     @Test
     void currentAcceptsLegacyOpenStatus() {
-        LocalDateTime now = LocalDateTime.now();
-
         String status = ProductStatus.current(
-                now.minusMinutes(10),
-                now.plusHours(1),
-                "OPEN"
+                NOW.minusMinutes(10),
+                NOW.plusHours(1),
+                "OPEN",
+                NOW
         );
 
         assertEquals(ProductStatus.OPENING, status);
@@ -76,12 +72,11 @@ class ProductStatusTest {
 
     @Test
     void currentAcceptsMissingStatusAndUsesTimes() {
-        LocalDateTime now = LocalDateTime.now();
-
         String status = ProductStatus.current(
-                now.minusMinutes(10),
-                now.plusHours(1),
-                null
+                NOW.minusMinutes(10),
+                NOW.plusHours(1),
+                null,
+                NOW
         );
 
         assertEquals(ProductStatus.OPENING, status);

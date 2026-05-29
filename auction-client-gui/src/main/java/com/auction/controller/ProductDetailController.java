@@ -7,6 +7,7 @@ import com.auction.network.BidUpdateListener;
 import com.auction.service.BidResult;
 import com.auction.service.remote.RemoteBidService;
 import com.auction.util.AlertUtil;
+import com.auction.util.BidNotificationUtil;
 import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
 import javafx.collections.FXCollections;
@@ -28,6 +29,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 
 import java.io.File;
@@ -380,7 +382,17 @@ public class ProductDetailController {
     }
 
     private void handleBidUpdate(org.example.network.protocol.Message message) {
-        if (product == null || message == null || message.getData() == null) {
+        if (message == null || message.getData() == null) {
+            return;
+        }
+
+        BidNotificationUtil.showBidNotification(
+                productNameLabel.getScene() == null ? null : productNameLabel.getScene().getWindow(),
+                username,
+                message
+        );
+
+        if (product == null) {
             return;
         }
 
@@ -454,7 +466,7 @@ public class ProductDetailController {
     private boolean isAuctionNotStarted() {
         return product == null
                 || (product.getStartTime() != null
-                && product.getStartTime().isAfter(LocalDateTime.now()));
+                && product.getStartTime().isAfter(AuctionTime.now()));
     }
 
     private String getDisplayStatus() {

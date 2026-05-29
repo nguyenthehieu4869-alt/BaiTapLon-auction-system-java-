@@ -26,7 +26,7 @@
       </ImageView>
 
         <VBox maxWidth="400.0" prefWidth="400.0" spacing="5">
-            <Label style="-fx-font-size: 30px; -fx-font-weight: bold; -fx-font-style: italic;" text="Chào mừng" textFill="#eff3f3">
+            <Label style="-fx-font-size: 30px; -fx-font-weight: bold; -fx-font-style: italic;" text="Welcome" textFill="#eff3f3">
             <VBox.margin>
                <Insets />
             </VBox.margin>

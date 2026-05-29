@@ -19,6 +19,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 
 import java.time.LocalDateTime;
@@ -156,19 +157,21 @@ public class AdminHomeController {
             return "N/A";
         }
 
-        if (product.getStartTime() != null && product.getStartTime().isAfter(LocalDateTime.now())) {
-            java.time.Duration duration = java.time.Duration.between(LocalDateTime.now(), product.getStartTime());
+        LocalDateTime now = AuctionTime.now();
+
+        if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
+            java.time.Duration duration = java.time.Duration.between(now, product.getStartTime());
             return String.format("Bắt đầu sau %02d:%02d:%02d",
                     duration.toHours(),
                     duration.toMinutesPart(),
                     duration.toSecondsPart());
         }
 
-        if (!product.getEndTime().isAfter(LocalDateTime.now())) {
+        if (!product.getEndTime().isAfter(now)) {
             return "Ended";
         }
 
-        java.time.Duration duration = java.time.Duration.between(LocalDateTime.now(), product.getEndTime());
+        java.time.Duration duration = java.time.Duration.between(now, product.getEndTime());
         return String.format("%02d:%02d:%02d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
     }
 

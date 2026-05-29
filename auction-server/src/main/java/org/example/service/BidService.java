@@ -1,5 +1,6 @@
 package org.example.service;
 
+import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 import org.example.database.BidDAO;
 import org.example.database.DatabaseManager;
@@ -8,7 +9,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -48,12 +48,14 @@ public class BidService {
                 return BidResult.failure("Người bán không thể đặt giá sản phẩm của chính mình !");
             }
 
-            if (isAuctionFinished(product.status, product.endTime)) {
+            LocalDateTime now = AuctionTime.now();
+
+            if (isAuctionFinished(product.status, product.endTime, now)) {
                 conn.rollback();
                 return BidResult.failure("Phiên đấu giá đã kết thúc");
             }
 
-            if (isAuctionNotStarted(product.startTime)) {
+            if (isAuctionNotStarted(product.startTime, now)) {
                 conn.rollback();
                 return BidResult.failure("Phiên đấu giá chưa bắt đầu");
             }
@@ -63,12 +65,12 @@ public class BidService {
                 return BidResult.failure("Giá đặt phải cao hơn giá hiện tại");
             }
 
-            LocalDateTime newEndTime = extendIfNeeded(product.endTime);
+            LocalDateTime newEndTime = extendIfNeeded(product.endTime, now);
 
             bidDAO.updateCurrentPrice(conn, productId, bidPrice);
 
             if (newEndTime != null) {
-                bidDAO.updateEndTime(conn, productId, Timestamp.valueOf(newEndTime));
+                bidDAO.updateEndTime(conn, productId, newEndTime);
             } else {
                 newEndTime = product.endTime;
             }
@@ -77,7 +79,7 @@ public class BidService {
 
             conn.commit();
 
-            return BidResult.success("Đặt giá thành công", bidPrice, newEndTime);
+            return BidResult.success("Đặt giá thành công", bidPrice, newEndTime, product.name);
 
         } catch (Exception e) {
             rollbackQuietly(conn);
@@ -89,7 +91,7 @@ public class BidService {
     }
 
     private ProductSnapshot lockProduct(Connection conn, int productId) throws SQLException {
-        String sql = "SELECT current_price, status, start_time, end_time, seller_username FROM products WHERE id = ? FOR UPDATE";
+        String sql = "SELECT name, current_price, status, start_time, end_time, seller_username FROM products WHERE id = ? FOR UPDATE";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, productId);
@@ -99,34 +101,35 @@ public class BidService {
                     return null;
                 }
 
-                Timestamp startTimestamp = rs.getTimestamp("start_time");
-                Timestamp endTimestamp = rs.getTimestamp("end_time");
+                LocalDateTime startTime = rs.getObject("start_time", LocalDateTime.class);
+                LocalDateTime endTime = rs.getObject("end_time", LocalDateTime.class);
 
                 return new ProductSnapshot(
+                        rs.getString("name"),
                         rs.getDouble("current_price"),
                         rs.getString("status"),
-                        startTimestamp == null ? null : startTimestamp.toLocalDateTime(),
-                        endTimestamp == null ? null : endTimestamp.toLocalDateTime(),
+                        startTime,
+                        endTime,
                         rs.getString("seller_username")
                 );
             }
         }
     }
 
-    private boolean isAuctionFinished(String status, LocalDateTime endTime) {
-        return ProductStatus.isFinished(status, endTime);
+    private boolean isAuctionFinished(String status, LocalDateTime endTime, LocalDateTime now) {
+        return ProductStatus.isFinished(status, endTime, now);
     }
 
-    private boolean isAuctionNotStarted(LocalDateTime startTime) {
-        return startTime != null && startTime.isAfter(LocalDateTime.now());
+    private boolean isAuctionNotStarted(LocalDateTime startTime, LocalDateTime now) {
+        return startTime != null && startTime.isAfter(now);
     }
 
-    private LocalDateTime extendIfNeeded(LocalDateTime endTime) {
+    private LocalDateTime extendIfNeeded(LocalDateTime endTime, LocalDateTime now) {
         if (endTime == null) {
             return null;
         }
 
-        long secondsLeft = Duration.between(LocalDateTime.now(), endTime).getSeconds();
+        long secondsLeft = Duration.between(now, endTime).getSeconds();
 
         if (secondsLeft > 0 && secondsLeft <= EXTENSION_WINDOW_SECONDS) {
             return endTime.plusSeconds(EXTENSION_SECONDS);
@@ -154,13 +157,15 @@ public class BidService {
     }
 
     private static class ProductSnapshot {
+        String name;
         double currentPrice;
         String status;
         LocalDateTime startTime;
         LocalDateTime endTime;
         String sellerUsername;
 
-        ProductSnapshot(double currentPrice, String status, LocalDateTime startTime, LocalDateTime endTime, String sellerUsername) {
+        ProductSnapshot(String name, double currentPrice, String status, LocalDateTime startTime, LocalDateTime endTime, String sellerUsername) {
+            this.name = name;
             this.currentPrice = currentPrice;
             this.status = status;
             this.startTime = startTime;

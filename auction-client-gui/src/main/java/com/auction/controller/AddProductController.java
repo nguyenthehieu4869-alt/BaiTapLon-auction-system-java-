@@ -11,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.example.common.AuctionTime;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -130,7 +131,7 @@ public class AddProductController {
             return;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = AuctionTime.now();
 
         if (!startTime.isAfter(now)) {
             AlertUtil.showError("Thoi diem bat dau phai sau thoi diem hien tai !");

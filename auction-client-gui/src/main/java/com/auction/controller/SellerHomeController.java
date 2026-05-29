@@ -22,6 +22,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 
 import java.text.DecimalFormat;
@@ -138,7 +139,7 @@ public class SellerHomeController {
             return "N/A";
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = AuctionTime.now();
 
         if (product.getStartTime() != null && product.getStartTime().isAfter(now)) {
             java.time.Duration duration =

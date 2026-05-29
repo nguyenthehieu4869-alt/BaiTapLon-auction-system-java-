@@ -1,9 +1,14 @@
 package org.example.database;
 
+import org.example.common.AuctionTime;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Statement;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Properties;
 
 public class DatabaseManager {
@@ -14,7 +19,18 @@ public class DatabaseManager {
     private static final String PASS = getConfig("db.password", "AUCTION_DB_PASSWORD", "");
 
     public static Connection getConnection() throws Exception {
-        return DriverManager.getConnection(URL, USER, PASS);
+        Connection conn = DriverManager.getConnection(URL, USER, PASS);
+        configureSessionTimeZone(conn);
+        return conn;
+    }
+
+    private static void configureSessionTimeZone(Connection conn) throws Exception {
+        ZoneOffset offset = AuctionTime.zone().getRules().getOffset(Instant.now());
+        String mysqlOffset = offset.getId().equals("Z") ? "+00:00" : offset.getId();
+
+        try (Statement statement = conn.createStatement()) {
+            statement.execute("SET time_zone = '" + mysqlOffset + "'");
+        }
     }
 
     private static Properties loadConfig() {

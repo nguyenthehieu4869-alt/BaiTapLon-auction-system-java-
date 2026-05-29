@@ -1,5 +1,6 @@
 package org.example.database;
 
+import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 import org.example.network.dto.BidDTO;
 
@@ -8,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,11 +25,11 @@ public class BidDAO {
         }
     }
 
-    public void updateEndTime(Connection conn, int productId, Timestamp endTime) throws SQLException {
+    public void updateEndTime(Connection conn, int productId, LocalDateTime endTime) throws SQLException {
         String sql = "UPDATE products SET end_time = ? WHERE id = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setTimestamp(1, endTime);
+            ps.setObject(1, endTime);
             ps.setInt(2, productId);
             ps.executeUpdate();
         }
@@ -111,7 +113,7 @@ public class BidDAO {
         String sql = """
             SELECT COUNT(*)
             FROM products p
-            WHERE (p.status = ? OR p.end_time <= NOW())
+            WHERE (p.status = ? OR p.end_time <= ?)
               AND (
                   SELECT b.bidder_username
                   FROM bids b
@@ -125,7 +127,8 @@ public class BidDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, ProductStatus.FINISHED);
-            ps.setString(2, bidderUsername);
+            ps.setObject(2, AuctionTime.now());
+            ps.setString(3, bidderUsername);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
