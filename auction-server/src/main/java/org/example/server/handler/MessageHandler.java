@@ -2,12 +2,14 @@ package org.example.server.handler;
 
 import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
+import org.example.common.UserRole;
 import org.example.database.BidDAO;
 import org.example.database.ProductDAO;
 import org.example.database.UserDAO;
 import org.example.model.Product;
 import org.example.network.dto.BidRequest;
 import org.example.network.dto.LoginRequest;
+import org.example.network.dto.LoginResponse;
 import org.example.network.dto.ProductSaveRequest;
 import org.example.network.dto.RegisterRequest;
 import org.example.network.dto.UserProfileDTO;
@@ -15,6 +17,7 @@ import org.example.network.protocol.Message;
 import org.example.network.protocol.MessageType;
 import org.example.network.protocol.Protocol;
 import org.example.server.ServerManager;
+import org.example.service.AccountAuthorization;
 import org.example.service.BidResult;
 import org.example.service.BidService;
 
@@ -27,6 +30,8 @@ import java.util.Map;
 public class MessageHandler {
 
     private final PrintWriter out;
+    private String authenticatedUsername;
+    private UserRole authenticatedRole;
 
     public MessageHandler(PrintWriter out) {
         this.out = out;
@@ -106,11 +111,21 @@ public class MessageHandler {
         LoginRequest request = parseData(msg, LoginRequest.class);
 
         UserDAO dao = new UserDAO();
-        boolean result = dao.login(request.getUsername(), request.getPassword());
+        UserRole role = dao.login(request.getUsername(), request.getPassword());
+
+        if (role == UserRole.ADMIN
+                && !AccountAuthorization.isAuthorizedAdmin(request.getUsername(), request.getPassword())) {
+            role = null;
+        }
+
+        boolean result = role != null;
+
+        authenticatedUsername = result ? request.getUsername() : null;
+        authenticatedRole = role;
 
         send(msg, new Message(
                 result ? MessageType.LOGIN_SUCCESS : MessageType.LOGIN_FAIL,
-                null,
+                result ? new LoginResponse(authenticatedUsername, authenticatedRole) : null,
                 result,
                 result ? "Đăng nhập thành công" : "Sai tài khoản hoặc mật khẩu! "
         ));
@@ -118,12 +133,18 @@ public class MessageHandler {
 
     private void handleRegister(Message msg) {
         RegisterRequest request = parseData(msg, RegisterRequest.class);
+        String username = requireText(request.getUsername(), "Thiếu username");
+        String email = requireText(request.getEmail(), "Thiếu email");
+        String password = requireText(request.getPassword(), "Thiếu password");
+
+        AccountAuthorization.validateRegistration(username, password, request.getRole());
 
         UserDAO dao = new UserDAO();
         boolean result = dao.register(
-                request.getUsername(),
-                request.getEmail(),
-                request.getPassword()
+                username,
+                email,
+                password,
+                request.getRole()
         );
 
         send(msg, new Message(
@@ -135,12 +156,15 @@ public class MessageHandler {
     }
 
     private void handleGetUserProfile(Message msg) {
+        requireAuthenticated();
         Map<?, ?> data = getDataMap(msg);
         String username = getString(data, "username");
 
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Thiếu username");
         }
+
+        username = authenticatedUsername;
 
         UserDAO userDAO = new UserDAO();
         String email = userDAO.getEmailByUsername(username);
@@ -167,6 +191,7 @@ public class MessageHandler {
     }
 
     private void handleGetProducts(Message msg) {
+        requireAuthenticated();
         ProductDAO dao = new ProductDAO();
         List<Product> products = dao.getAllProducts();
 
@@ -179,12 +204,13 @@ public class MessageHandler {
     }
 
     private void handlePlaceBid(Message msg) {
+        requireRole(UserRole.BIDDER);
         BidRequest request = parseData(msg, BidRequest.class);
 
         BidService service = new BidService();
         BidResult result = service.placeBid(
                 request.getProductId(),
-                request.getBidderUsername(),
+                authenticatedUsername,
                 request.getBidPrice()
         );
 
@@ -201,7 +227,7 @@ public class MessageHandler {
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("productId", request.getProductId());
         updateData.put("productName", result.getProductName());
-        updateData.put("bidderUsername", request.getBidderUsername());
+        updateData.put("bidderUsername", authenticatedUsername);
         updateData.put("currentPrice", result.getCurrentPrice());
         updateData.put("endTime", result.getEndTime() == null ? null : result.getEndTime().toString());
 
@@ -221,8 +247,10 @@ public class MessageHandler {
     }
 
     private void handleGetProductsBySeller(Message msg) {
+        requireRole(UserRole.SELLER);
         Map<?, ?> data = getDataMap(msg);
         String sellerUsername = getString(data, "sellerUsername");
+        sellerUsername = authenticatedUsername;
 
         ProductDAO dao = new ProductDAO();
         List<Product> products = dao.getProductsBySeller(sellerUsername);
@@ -236,6 +264,7 @@ public class MessageHandler {
     }
 
     private void handleAddProduct(Message msg) {
+        requireRole(UserRole.SELLER);
         ProductSaveRequest request = parseData(msg, ProductSaveRequest.class);
 
         LocalDateTime startTime = parseDateTime(request.getStartTime(), "Thiếu thời điểm bắt đầu");
@@ -263,7 +292,7 @@ public class MessageHandler {
                 ProductStatus.COMING_SOON,
                 startTime,
                 endTime,
-                request.getSellerUsername()
+                authenticatedUsername
         );
 
         send(msg, new Message(
@@ -287,16 +316,18 @@ public class MessageHandler {
     }
 
     private void handleEditProduct(Message msg) {
+        requireRole(UserRole.SELLER);
         ProductSaveRequest request = parseData(msg, ProductSaveRequest.class);
 
         ProductDAO dao = new ProductDAO();
-        boolean result = dao.editProduct(
+        boolean result = dao.editProductBySeller(
                 request.getId(),
                 request.getName(),
                 request.getDescription(),
                 request.getStartPrice(),
                 request.getStatus(),
-                request.getImagePath()
+                request.getImagePath(),
+                authenticatedUsername
         );
 
         send(msg, new Message(
@@ -312,6 +343,7 @@ public class MessageHandler {
     }
 
     private void handleDeleteProduct(Message msg) {
+        requireRole(UserRole.ADMIN);
         Map<?, ?> data = getDataMap(msg);
         int productId = getInt(data, "productId");
 
@@ -331,6 +363,7 @@ public class MessageHandler {
     }
 
     private void handleCloseAuction(Message msg) {
+        requireRole(UserRole.ADMIN);
         Map<?, ?> data = getDataMap(msg);
         int productId = getInt(data, "productId");
 
@@ -366,6 +399,7 @@ public class MessageHandler {
     }
 
     private void handleGetBidHistory(Message msg) {
+        requireAuthenticated();
         Map<?, ?> data = getDataMap(msg);
         int productId = getInt(data, "productId");
 
@@ -380,6 +414,7 @@ public class MessageHandler {
     }
 
     private void handleGetWinner(Message msg) {
+        requireAuthenticated();
         Map<?, ?> data = getDataMap(msg);
         int productId = getInt(data, "productId");
 
@@ -436,6 +471,28 @@ public class MessageHandler {
         }
 
         throw new IllegalArgumentException("Thiếu hoặc sai trường: " + key);
+    }
+
+    private String requireText(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+
+        return value.trim();
+    }
+
+    private void requireAuthenticated() {
+        if (authenticatedUsername == null || authenticatedRole == null) {
+            throw new IllegalArgumentException("Bạn chưa đăng nhập");
+        }
+    }
+
+    private void requireRole(UserRole requiredRole) {
+        requireAuthenticated();
+
+        if (authenticatedRole != requiredRole) {
+            throw new IllegalArgumentException("Tài khoản không có quyền " + requiredRole.name());
+        }
     }
 
     private void sendError(Message request, String message) {

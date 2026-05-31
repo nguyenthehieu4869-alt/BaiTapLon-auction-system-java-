@@ -1,6 +1,7 @@
 package com.auction.controller;
 
 import com.auction.model.Product;
+import com.auction.network.AuctionNetworkClient;
 import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
 import com.auction.util.FxmlUtil;
@@ -273,6 +274,7 @@ public class SellerHomeController {
 
     @FXML
     private void handleLogout(ActionEvent event) {
+        AuctionNetworkClient.getInstance().close();
         try {
             Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();
 

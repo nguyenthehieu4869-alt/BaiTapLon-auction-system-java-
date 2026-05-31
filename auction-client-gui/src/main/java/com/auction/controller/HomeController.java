@@ -54,6 +54,7 @@ public class HomeController {
     @FXML
     private void handleLogout() {
         unregisterRealtimeListeners();
+        AuctionNetworkClient.getInstance().close();
         try {
             Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();
 

@@ -127,6 +127,7 @@ public class AdminHomeController {
     @FXML
     private void handleLogout() {
         unregisterRealtimeListeners();
+        AuctionNetworkClient.getInstance().close();
         try {
             Parent root = FxmlUtil.createLoader(getClass(), "/com/auction/view/login.fxml").load();
             Stage stage = (Stage) welcomeLabel.getScene().getWindow();

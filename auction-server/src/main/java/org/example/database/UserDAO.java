@@ -1,13 +1,15 @@
 package org.example.database;
 
+import org.example.common.UserRole;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class UserDAO {
 
-    public boolean login(String username, String password) {
-        String sql = "SELECT 1 FROM users WHERE username = ? AND password = ?";
+    public UserRole login(String username, String password) {
+        String sql = "SELECT role FROM users WHERE username = ? AND password = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -16,17 +18,17 @@ public class UserDAO {
             ps.setString(2, password);
 
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
+                return rs.next() ? UserRole.fromDatabaseValue(rs.getString("role")) : null;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            return null;
         }
     }
 
-    public boolean register(String username, String email, String password) {
-        String sql = "INSERT INTO users(username, email, password) VALUES (?, ?, ?)";
+    public boolean register(String username, String email, String password, UserRole role) {
+        String sql = "INSERT INTO users(username, email, password, role) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -34,6 +36,7 @@ public class UserDAO {
             ps.setString(1, username);
             ps.setString(2, email);
             ps.setString(3, password);
+            ps.setString(4, role.name());
 
             return ps.executeUpdate() > 0;
 

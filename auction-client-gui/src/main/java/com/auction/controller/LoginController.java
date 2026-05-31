@@ -10,8 +10,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.example.common.UserRole;
 
 public class LoginController {
+    private static final String BIDDER_HOME_FXML = "/com/auction/view/home.fxml";
+    private static final String SELLER_HOME_FXML = "/com/auction/view/seller_home.fxml";
+    private static final String ADMIN_HOME_FXML = "/com/auction/view/admin_home.fxml";
+
     @FXML
     private TextField usernameField;
 
@@ -20,10 +25,10 @@ public class LoginController {
 
     @FXML
     private void handleLogin() {
-        String user = usernameField.getText();
+        String username = usernameField.getText().trim();
         String password = passwordField.getText();
 
-        if (user.isEmpty() || password.isEmpty()) {
+        if (username.isEmpty() || password.isEmpty()) {
             AlertUtil.showError("Vui lòng nhập đầy đủ!");
             return;
         }
@@ -34,20 +39,40 @@ public class LoginController {
         }
 
         RemoteUserService userService = new RemoteUserService();
-        RemoteUserService.AuthResult loginResult = userService.login(user, password);
+        RemoteUserService.AuthResult loginResult = userService.login(username, password);
 
         if (!loginResult.isSuccess()) {
             AlertUtil.showError(loginResult.getMessage());
             return;
         }
 
-        try {
-            FXMLLoader loader = FxmlUtil.createLoader(getClass(), "/com/auction/view/role_selection.fxml");
-            Parent root = loader.load();
+        openHome(username, loginResult.getRole());
+    }
 
-            RoleSelectionController controller = loader.getController();
-            controller.setUsername(user);
-            controller.setPassword(password);
+    private void openHome(String username, UserRole role) {
+        if (role == null) {
+            AlertUtil.showError("Không xác định được role của tài khoản.");
+            return;
+        }
+
+        String fxmlPath = switch (role) {
+            case BIDDER -> BIDDER_HOME_FXML;
+            case SELLER -> SELLER_HOME_FXML;
+            case ADMIN -> ADMIN_HOME_FXML;
+        };
+
+        try {
+            FXMLLoader loader = FxmlUtil.createLoader(getClass(), fxmlPath);
+            Parent root = loader.load();
+            Object controller = loader.getController();
+
+            if (controller instanceof HomeController homeController) {
+                homeController.setUser(username);
+            } else if (controller instanceof SellerHomeController sellerController) {
+                sellerController.setUsername(username);
+            } else if (controller instanceof AdminHomeController adminController) {
+                adminController.setUsername(username);
+            }
 
             Stage stage = (Stage) usernameField.getScene().getWindow();
             stage.setMaximized(false);
@@ -56,7 +81,7 @@ public class LoginController {
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();
-            AlertUtil.showError("Không thể mở màn hình chọn vai trò: " + e.getMessage());
+            AlertUtil.showError("Không thể mở màn hình cho role " + role + ": " + e.getMessage());
         }
     }
 

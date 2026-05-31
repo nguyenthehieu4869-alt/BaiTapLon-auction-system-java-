@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
@@ -9,51 +10,36 @@
 <?import javafx.scene.layout.VBox?>
 
 <HBox prefHeight="650" prefWidth="1000" style="-fx-background-color: #003c3a;" xmlns="http://javafx.com/javafx/21.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.auction.controller.RegisterController">
-
-    <!-- LEFT PANEL -->
     <VBox prefWidth="420" spacing="24" style="-fx-background-color: #003c3a; -fx-padding: 45;">
-
         <Label style="-fx-text-fill: #d4af37; -fx-font-size: 22px; -fx-font-weight: bold;" text="The Auction House" />
-
-        <Label style="-fx-text-fill: white;                       -fx-font-size: 36px;                       -fx-font-weight: bold;" text="Create Account" />
-
-        <Label style="-fx-text-fill: #d1d5db;                       -fx-font-size: 15px;" text="Đăng ký tài khoản để bắt đầu tham gia đấu giá, theo dõi sản phẩm và đặt giá dễ dàng." wrapText="true" />
-
+        <Label style="-fx-text-fill: white; -fx-font-size: 36px; -fx-font-weight: bold;" text="Create Account" />
+        <Label style="-fx-text-fill: #d1d5db; -fx-font-size: 15px;" text="Đăng ký tài khoản và chọn một vai trò để bắt đầu sử dụng hệ thống." wrapText="true" />
         <VBox spacing="15">
-            <Label style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;" text="✅ Đấu giá minh bạch" />
+            <Label style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;" text="Đấu giá minh bạch" />
             <Label style="-fx-text-fill: #cbd5e1;" text="Quy trình rõ ràng, công bằng" />
-
-            <Label style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;" text="📦 Đa dạng sản phẩm" />
+            <Label style="-fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;" text="Đa dạng sản phẩm" />
             <Label style="-fx-text-fill: #cbd5e1;" text="Nhiều danh mục sản phẩm để lựa chọn" />
-
-
         </VBox>
-
         <Region VBox.vgrow="ALWAYS" />
-
     </VBox>
 
-
-    <!-- RIGHT PANEL -->
     <VBox alignment="CENTER_LEFT" maxWidth="Infinity" prefWidth="580" spacing="14" style="-fx-background-color: #003c3a; -fx-padding: 70;" HBox.hgrow="ALWAYS">
-
         <Label style="-fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #d4af37; -fx-font-style: italic;" text="Đăng ký" />
-
         <Label style="-fx-text-fill: #d4af36; -fx-font-size: 14px;" text="Tạo tài khoản mới" />
 
         <Label text="Username" textFill="#d4af36" />
-        <TextField fx:id="usernameField" prefHeight="42" promptText="Nhập username" style="-fx-background-radius: 8;                           -fx-border-radius: 8;                           -fx-border-color: #d1d5db;                           -fx-background-color: white;" />
+        <TextField fx:id="usernameField" prefHeight="42" promptText="Nhập username" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #d1d5db; -fx-background-color: white;" />
 
         <Label text="Email" textFill="#d4af36" />
-        <TextField fx:id="emailField" prefHeight="42" promptText="Nhập email" style="-fx-background-radius: 8;                           -fx-border-radius: 8;                           -fx-border-color: #d1d5db;                           -fx-background-color: white;" />
+        <TextField fx:id="emailField" prefHeight="42" promptText="Nhập email" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #d1d5db; -fx-background-color: white;" />
 
         <Label text="Mật khẩu" textFill="#d4af36" />
-        <PasswordField fx:id="passwordField" prefHeight="42" promptText="Nhập mật khẩu" style="-fx-background-radius: 8;                               -fx-border-radius: 8;                               -fx-border-color: #d1d5db;                               -fx-background-color: white;" />
+        <PasswordField fx:id="passwordField" prefHeight="42" promptText="Nhập mật khẩu" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #d1d5db; -fx-background-color: white;" />
+
+        <Label text="Role" textFill="#d4af36" />
+        <ComboBox fx:id="roleComboBox" maxWidth="Infinity" prefHeight="42" promptText="Chọn role" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #d1d5db; -fx-background-color: white;" />
 
         <Button maxWidth="Infinity" onAction="#handleRegister" prefHeight="45" style="-fx-background-color: #c49a47; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8;" text="Đăng ký" />
-
         <Button maxWidth="Infinity" onAction="#handleBack" prefHeight="40" style="-fx-background-color: transparent; -fx-text-fill: #d99a22; -fx-font-weight: bold;" text="Quay lại đăng nhập" underline="true" />
-
     </VBox>
-
 </HBox>

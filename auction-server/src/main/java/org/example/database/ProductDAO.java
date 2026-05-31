@@ -116,12 +116,13 @@ public class ProductDAO {
       }
    }
 
-   public boolean editProduct(int id, String name, String description,
-                                double startPrice, String status, String imagePath) {
+   public boolean editProductBySeller(int id, String name, String description,
+                                      double startPrice, String status, String imagePath,
+                                      String sellerUsername) {
       String sql = """
             UPDATE products
             SET name = ?, description = ?, start_price = ?, status = ?, image_path = ?
-            WHERE id = ?
+            WHERE id = ? AND seller_username = ?
             """;
 
       try (Connection conn = DatabaseManager.getConnection();
@@ -133,6 +134,7 @@ public class ProductDAO {
          ps.setString(4, ProductStatus.normalize(status));
          ps.setString(5, imagePath);
          ps.setInt(6, id);
+         ps.setString(7, sellerUsername);
 
          return ps.executeUpdate() > 0;
 

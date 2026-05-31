@@ -7,9 +7,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.example.common.UserRole;
 
 public class RegisterController {
 
@@ -23,10 +25,20 @@ public class RegisterController {
     private PasswordField passwordField;
 
     @FXML
+    private ComboBox<UserRole> roleComboBox;
+
+    @FXML
+    private void initialize() {
+        roleComboBox.getItems().setAll(UserRole.BIDDER, UserRole.SELLER, UserRole.ADMIN);
+        roleComboBox.setValue(UserRole.BIDDER);
+    }
+
+    @FXML
     private void handleRegister() {
         String username = usernameField.getText().trim();
         String email = emailField.getText().trim();
         String password = passwordField.getText();
+        UserRole role = roleComboBox.getValue();
 
         if (username.isEmpty()) {
             AlertUtil.showError("Vui lòng nhập username");
@@ -53,9 +65,14 @@ public class RegisterController {
             return;
         }
 
-        RemoteUserService userService = new RemoteUserService();
+        if (role == null) {
+            AlertUtil.showError("Vui lòng chọn role");
+            return;
+        }
 
-        RemoteUserService.AuthResult registerResult = userService.registerAccount(username, email, password);
+        RemoteUserService userService = new RemoteUserService();
+        RemoteUserService.AuthResult registerResult =
+                userService.registerAccount(username, email, password, role);
 
         if (registerResult.isSuccess()) {
             AlertUtil.showInfo("Đăng ký thành công!");
@@ -79,11 +96,8 @@ public class RegisterController {
             stage.setScene(new Scene(root));
             stage.setMaximized(true);
             stage.show();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
 }

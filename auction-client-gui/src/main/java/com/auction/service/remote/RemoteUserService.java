@@ -1,7 +1,9 @@
 package com.auction.service.remote;
 
 import com.auction.network.AuctionNetworkClient;
+import org.example.common.UserRole;
 import org.example.network.dto.LoginRequest;
+import org.example.network.dto.LoginResponse;
 import org.example.network.dto.RegisterRequest;
 import org.example.network.dto.UserProfileDTO;
 import org.example.network.protocol.Message;
@@ -17,15 +19,15 @@ public class RemoteUserService {
                 new Message(MessageType.LOGIN, new LoginRequest(username, password), true)
         );
 
-        return toAuthResult(response, "Sai tài khoản hoặc mật khẩu!");
+        return toAuthResult(response, "Sai tài khoản hoặc mật khẩu!", true);
     }
 
-    public AuthResult registerAccount(String username, String email, String password) {
+    public AuthResult registerAccount(String username, String email, String password, UserRole role) {
         Message response = AuctionNetworkClient.getInstance().sendAndWait(
-                new Message(MessageType.REGISTER, new RegisterRequest(username, email, password), true)
+                new Message(MessageType.REGISTER, new RegisterRequest(username, email, password, role), true)
         );
 
-        return toAuthResult(response, "Username hoặc email đã tồn tại!");
+        return toAuthResult(response, "Username hoặc email đã tồn tại!", false);
     }
 
     public ProfileResult getUserProfileResult(String username) {
@@ -64,7 +66,7 @@ public class RemoteUserService {
         return new ProfileResult(true, "Load profile thành công", profile);
     }
 
-    private AuthResult toAuthResult(Message response, String fallbackMessage) {
+    private AuthResult toAuthResult(Message response, String fallbackMessage, boolean expectLoginResponse) {
         if (response == null) {
             return new AuthResult(false, "Không nhận được phản hồi từ server!");
         }
@@ -74,16 +76,37 @@ public class RemoteUserService {
             message = fallbackMessage;
         }
 
-        return new AuthResult(response.isSuccess(), message);
+        UserRole role = null;
+
+        if (response.isSuccess() && expectLoginResponse) {
+            LoginResponse loginResponse = Protocol.gson().fromJson(
+                    Protocol.gson().toJson(response.getData()),
+                    LoginResponse.class
+            );
+
+            if (loginResponse == null || loginResponse.getRole() == null) {
+                return new AuthResult(false, "Server không trả về role của tài khoản.");
+            }
+
+            role = loginResponse.getRole();
+        }
+
+        return new AuthResult(response.isSuccess(), message, role);
     }
 
     public static class AuthResult {
         private final boolean success;
         private final String message;
+        private final UserRole role;
 
         public AuthResult(boolean success, String message) {
+            this(success, message, null);
+        }
+
+        public AuthResult(boolean success, String message, UserRole role) {
             this.success = success;
             this.message = message;
+            this.role = role;
         }
 
         public boolean isSuccess() {
@@ -92,6 +115,10 @@ public class RemoteUserService {
 
         public String getMessage() {
             return message;
+        }
+
+        public UserRole getRole() {
+            return role;
         }
     }
 
