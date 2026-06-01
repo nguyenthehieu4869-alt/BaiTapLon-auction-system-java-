@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -22,6 +24,33 @@ public class DatabaseManager {
         Connection conn = DriverManager.getConnection(URL, USER, PASS);
         configureSessionTimeZone(conn);
         return conn;
+    }
+
+    public static void ensureSchema() throws Exception {
+        String columnTypeSql = """
+                SELECT DATA_TYPE
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'products'
+                  AND COLUMN_NAME = 'image_path'
+                """;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(columnTypeSql);
+             ResultSet rs = ps.executeQuery()) {
+            if (!rs.next()) {
+                throw new IllegalStateException("Thiếu cột products.image_path trong database.");
+            }
+
+            if ("longtext".equalsIgnoreCase(rs.getString("DATA_TYPE"))) {
+                return;
+            }
+        }
+
+        try (Connection conn = getConnection();
+             Statement statement = conn.createStatement()) {
+            statement.execute("ALTER TABLE products MODIFY COLUMN image_path LONGTEXT NULL");
+        }
     }
 
     private static void configureSessionTimeZone(Connection conn) throws Exception {

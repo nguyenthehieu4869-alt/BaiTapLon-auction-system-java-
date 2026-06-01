@@ -157,3 +157,57 @@
 .date-picker .arrow {
     -fx-background-color: #d4af37;
 }
+
+.price-chart {
+    -fx-background-color: transparent;
+    -fx-padding: 4 0 0 0;
+}
+
+.price-chart .chart-plot-background {
+    -fx-background-color: rgba(3, 39, 44, 0.82);
+    -fx-border-color: rgba(212,175,55,0.58);
+    -fx-border-width: 1;
+}
+
+.price-chart .chart-horizontal-grid-lines,
+.price-chart .chart-vertical-grid-lines {
+    -fx-stroke: rgba(248,242,220,0.28);
+    -fx-stroke-dash-array: 4 4;
+}
+
+.price-chart .axis {
+    -fx-tick-label-fill: #f8f2dc;
+    -fx-font-size: 11;
+    -fx-tick-length: 5;
+}
+
+.price-chart .axis-label {
+    -fx-text-fill: #d4af37;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+}
+
+.price-chart .axis:bottom {
+    -fx-border-color: rgba(248,242,220,0.78) transparent transparent transparent;
+}
+
+.price-chart .axis:left {
+    -fx-border-color: transparent rgba(248,242,220,0.78) transparent transparent;
+}
+
+.price-chart .axis-tick-mark,
+.price-chart .axis-minor-tick-mark {
+    -fx-stroke: rgba(248,242,220,0.72);
+}
+
+.price-chart .chart-series-line {
+    -fx-stroke: #f0c85c;
+    -fx-stroke-width: 2.2;
+}
+
+.price-chart .chart-line-symbol {
+    -fx-background-color: #d4af37, #063a3a;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 7px;
+    -fx-padding: 5px;
+}

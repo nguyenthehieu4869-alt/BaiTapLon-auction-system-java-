@@ -29,6 +29,7 @@ public class AuctionNetworkClient {
     private static final Properties CONFIG = loadConfig();
     private static final String HOST = getConfig("server.host", "AUCTION_SERVER_HOST", "localhost");
     private static final int PORT = getIntConfig("server.port", "AUCTION_SERVER_PORT", 9999);
+    private static final int REQUEST_TIMEOUT_SECONDS = 15;
     private static final AuctionNetworkClient INSTANCE = new AuctionNetworkClient();
 
     private Socket socket;
@@ -102,7 +103,7 @@ public class AuctionNetworkClient {
         }
 
         try {
-            return future.get(5, TimeUnit.SECONDS);
+            return future.get(REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             pendingResponses.remove(requestId);
             close();

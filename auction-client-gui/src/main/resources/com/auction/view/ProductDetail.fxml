@@ -79,12 +79,12 @@
                                              </font>
                                           </Label>
 
-                                          <LineChart fx:id="priceChart" animated="false" createSymbols="true" legendVisible="false" prefHeight="118.0" style="-fx-background-color: transparent; -fx-padding: 0;">
+                                          <LineChart fx:id="priceChart" animated="false" createSymbols="true" horizontalGridLinesVisible="true" legendVisible="false" minHeight="210.0" prefHeight="230.0" styleClass="price-chart" verticalGridLinesVisible="true">
                                              <xAxis>
                                                 <NumberAxis fx:id="priceChartXAxis" autoRanging="false" label="Thời gian" />
                                              </xAxis>
                                              <yAxis>
-                                                <NumberAxis fx:id="priceChartYAxis" autoRanging="false" label="Giá" />
+                                                <NumberAxis fx:id="priceChartYAxis" autoRanging="false" label="Giá thầu" />
                                              </yAxis>
                                           </LineChart>
                                        </children>

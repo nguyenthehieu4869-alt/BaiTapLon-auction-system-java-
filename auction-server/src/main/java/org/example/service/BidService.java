@@ -1,7 +1,11 @@
 package org.example.service;
 
+import com.auction.logic.exception.AuctionClosedException;
+import com.auction.logic.exception.InvalidBidException;
+import com.auction.logic.model.Auction;
+import com.auction.logic.model.BidTransaction;
+import com.auction.logic.model.Bidder;
 import org.example.common.AuctionTime;
-import org.example.common.ProductStatus;
 import org.example.database.BidDAO;
 import org.example.database.DatabaseManager;
 
@@ -17,6 +21,7 @@ public class BidService {
     private static final int EXTENSION_SECONDS = 15;
 
     private final BidDAO bidDAO = new BidDAO();
+    private final DomainAuctionMapper auctionMapper = new DomainAuctionMapper();
 
     public BidResult placeBid(int productId, String bidderUsername, double bidPrice) {
         if (bidderUsername == null || bidderUsername.isBlank()) {
@@ -42,32 +47,22 @@ public class BidService {
                 return BidResult.failure("Không tìm thấy sản phẩm");
             }
 
-            if (product.sellerUsername != null
-                    && product.sellerUsername.equalsIgnoreCase(normalizedBidderUsername)) {
+            Auction auction = auctionMapper.toDomainAuction(product);
+            auction.addObserver(new AuctionBidObserver());
+
+            BidTransaction transaction;
+            try {
+                transaction = auction.placeBid(new Bidder(normalizedBidderUsername), bidPrice);
+            } catch (InvalidBidException | AuctionClosedException e) {
                 conn.rollback();
-                return BidResult.failure("Người bán không thể đặt giá sản phẩm của chính mình !");
+                return BidResult.failure(e.getMessage());
             }
 
             LocalDateTime now = AuctionTime.now();
 
-            if (isAuctionFinished(product.status, product.endTime, now)) {
-                conn.rollback();
-                return BidResult.failure("Phiên đấu giá đã kết thúc");
-            }
-
-            if (isAuctionNotStarted(product.startTime, now)) {
-                conn.rollback();
-                return BidResult.failure("Phiên đấu giá chưa bắt đầu");
-            }
-
-            if (bidPrice <= product.currentPrice) {
-                conn.rollback();
-                return BidResult.failure("Giá đặt phải cao hơn giá hiện tại");
-            }
-
             LocalDateTime newEndTime = extendIfNeeded(product.endTime, now);
 
-            bidDAO.updateCurrentPrice(conn, productId, bidPrice);
+            bidDAO.updateCurrentPrice(conn, productId, auction.getCurrentPrice());
 
             if (newEndTime != null) {
                 bidDAO.updateEndTime(conn, productId, newEndTime);
@@ -75,11 +70,11 @@ public class BidService {
                 newEndTime = product.endTime;
             }
 
-            bidDAO.insertBid(conn, productId, normalizedBidderUsername, bidPrice);
+            bidDAO.insertBid(conn, productId, normalizedBidderUsername, transaction.getBidPrice());
 
             conn.commit();
 
-            return BidResult.success("Đặt giá thành công", bidPrice, newEndTime, product.name);
+            return BidResult.success("Đặt giá thành công", auction.getCurrentPrice(), newEndTime, product.name);
 
         } catch (Exception e) {
             rollbackQuietly(conn);
@@ -91,7 +86,7 @@ public class BidService {
     }
 
     private ProductSnapshot lockProduct(Connection conn, int productId) throws SQLException {
-        String sql = "SELECT name, current_price, status, start_time, end_time, seller_username FROM products WHERE id = ? FOR UPDATE";
+        String sql = "SELECT name, start_price, current_price, status, start_time, end_time, seller_username FROM products WHERE id = ? FOR UPDATE";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, productId);
@@ -106,6 +101,7 @@ public class BidService {
 
                 return new ProductSnapshot(
                         rs.getString("name"),
+                        rs.getDouble("start_price"),
                         rs.getDouble("current_price"),
                         rs.getString("status"),
                         startTime,
@@ -114,14 +110,6 @@ public class BidService {
                 );
             }
         }
-    }
-
-    private boolean isAuctionFinished(String status, LocalDateTime endTime, LocalDateTime now) {
-        return ProductStatus.isFinished(status, endTime, now);
-    }
-
-    private boolean isAuctionNotStarted(LocalDateTime startTime, LocalDateTime now) {
-        return startTime != null && startTime.isAfter(now);
     }
 
     private LocalDateTime extendIfNeeded(LocalDateTime endTime, LocalDateTime now) {
@@ -156,16 +144,18 @@ public class BidService {
         }
     }
 
-    private static class ProductSnapshot {
-        String name;
-        double currentPrice;
-        String status;
-        LocalDateTime startTime;
-        LocalDateTime endTime;
-        String sellerUsername;
+    static final class ProductSnapshot {
+        final String name;
+        final double startPrice;
+        final double currentPrice;
+        final String status;
+        final LocalDateTime startTime;
+        final LocalDateTime endTime;
+        final String sellerUsername;
 
-        ProductSnapshot(String name, double currentPrice, String status, LocalDateTime startTime, LocalDateTime endTime, String sellerUsername) {
+        ProductSnapshot(String name, double startPrice, double currentPrice, String status, LocalDateTime startTime, LocalDateTime endTime, String sellerUsername) {
             this.name = name;
+            this.startPrice = startPrice;
             this.currentPrice = currentPrice;
             this.status = status;
             this.startTime = startTime;

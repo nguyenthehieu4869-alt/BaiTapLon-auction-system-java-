@@ -3,6 +3,7 @@ package com.auction.controller;
 import com.auction.model.Product;
 import com.auction.service.remote.RemoteProductService;
 import com.auction.util.AlertUtil;
+import com.auction.util.ProductImageUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -126,7 +127,7 @@ public class EditProductController {
             AlertUtil.showInfo("Cập nhật thành công !");
             closeWindow();
         } else {
-            AlertUtil.showError("Cập nhật thất bại !");
+            AlertUtil.showError(getSaveErrorMessage("Cập nhật thất bại !"));
         }
     }
 
@@ -147,16 +148,8 @@ public class EditProductController {
             return;
         }
 
-        File imageFile = new File(imagePath);
-        if (!imageFile.exists()) {
-            productImagePreview.setImage(null);
-            imageStatusLabel.setText("Ảnh đã lưu không tồn tại !");
-            imagePlaceholderLabel.setVisible(true);
-            return;
-        }
-
         try {
-            Image image = new Image(imageFile.toURI().toString(), 180, 120, true, true);
+            Image image = ProductImageUtil.loadImage(imagePath, 180, 120);
             if (image.isError()) {
                 productImagePreview.setImage(null);
                 imageStatusLabel.setText(" Không đọc được ảnh !");
@@ -165,7 +158,7 @@ public class EditProductController {
             }
 
             productImagePreview.setImage(image);
-            imageStatusLabel.setText("Đã chọn ảnh : " + imageFile.getName());
+            imageStatusLabel.setText("Đã chọn ảnh : " + ProductImageUtil.getDisplayName(imagePath));
             imagePlaceholderLabel.setVisible(false);
         } catch (Exception e) {
             productImagePreview.setImage(null);
@@ -175,7 +168,9 @@ public class EditProductController {
     }
 
     private void configureInitialDirectory(FileChooser fileChooser) {
-        if (selectedImagePath == null || selectedImagePath.isBlank()) {
+        if (selectedImagePath == null
+                || selectedImagePath.isBlank()
+                || ProductImageUtil.isEmbeddedImage(selectedImagePath)) {
             return;
         }
 
@@ -185,6 +180,11 @@ public class EditProductController {
         if (directory != null && directory.exists()) {
             fileChooser.setInitialDirectory(directory);
         }
+    }
+
+    private String getSaveErrorMessage(String fallbackMessage) {
+        String errorMessage = productService.getLastErrorMessage();
+        return errorMessage == null || errorMessage.isBlank() ? fallbackMessage : errorMessage;
     }
 
     private void closeWindow() {

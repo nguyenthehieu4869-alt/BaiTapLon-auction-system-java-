@@ -10,6 +10,7 @@ import com.auction.util.AlertUtil;
 import com.auction.util.BidNotificationUtil;
 import com.auction.util.FxmlUtil;
 import com.auction.util.PriceFormatter;
+import com.auction.util.ProductImageUtil;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -32,20 +33,28 @@ import javafx.util.StringConverter;
 import org.example.common.AuctionTime;
 import org.example.common.ProductStatus;
 
-import java.io.File;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ProductDetailController {
     private static final DateTimeFormatter PRODUCT_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DateTimeFormatter BID_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final DateTimeFormatter CHART_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final NumberFormat CHART_PRICE_FORMATTER = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
     private static final double SINGLE_POINT_PADDING_SECONDS = 60;
+    private static final int CHART_GRID_INTERVAL_COUNT = 5;
+    private static final double[] CHART_TIME_TICK_UNITS = {
+            1, 2, 5, 10, 15, 30,
+            60, 120, 300, 600, 900, 1800,
+            3600, 7200, 10800, 21600, 43200, 86400
+    };
 
     @FXML
     private Label productNameLabel;
@@ -226,16 +235,21 @@ public class ProductDetailController {
         priceChart.setAnimated(false);
         priceChart.setLegendVisible(false);
         priceChart.setCreateSymbols(true);
-        priceChart.setMinHeight(110);
-        priceChart.setPrefHeight(118);
-        priceChart.setMaxHeight(140);
+        priceChart.setMinHeight(210);
+        priceChart.setPrefHeight(230);
+        priceChart.setMaxHeight(260);
         priceChart.setMinWidth(0);
         priceChart.setMaxWidth(Double.MAX_VALUE);
+        priceChart.setHorizontalGridLinesVisible(true);
+        priceChart.setVerticalGridLinesVisible(true);
         priceChart.setVerticalZeroLineVisible(false);
         priceChart.setHorizontalZeroLineVisible(false);
 
         priceChartXAxis.setForceZeroInRange(false);
         priceChartXAxis.setTickLabelGap(6);
+        priceChartXAxis.setTickLabelRotation(-35);
+        priceChartXAxis.setTickLabelsVisible(true);
+        priceChartXAxis.setTickMarkVisible(true);
         priceChartXAxis.setMinorTickVisible(false);
         priceChartXAxis.setAutoRanging(false);
         priceChartXAxis.setLabel("Thời gian");
@@ -256,9 +270,23 @@ public class ProductDetailController {
         });
 
         priceChartYAxis.setForceZeroInRange(false);
+        priceChartYAxis.setTickLabelGap(6);
+        priceChartYAxis.setTickLabelsVisible(true);
+        priceChartYAxis.setTickMarkVisible(true);
         priceChartYAxis.setMinorTickVisible(false);
         priceChartYAxis.setAutoRanging(false);
-        priceChartYAxis.setLabel("Giá đấu");
+        priceChartYAxis.setLabel("Giá thầu");
+        priceChartYAxis.setTickLabelFormatter(new StringConverter<>() {
+            @Override
+            public String toString(Number value) {
+                return value == null ? "" : CHART_PRICE_FORMATTER.format(value.doubleValue());
+            }
+
+            @Override
+            public Number fromString(String value) {
+                return 0;
+            }
+        });
     }
 
     private void refreshPriceChart(List<Bid> sourceBids) {
@@ -302,10 +330,13 @@ public class ProductDetailController {
     private void updateTimeAxis(double minTime, double maxTime) {
         double range = Math.max(1, maxTime - minTime);
         double padding = range <= 1 ? SINGLE_POINT_PADDING_SECONDS : Math.max(30, range * 0.08);
+        double tickUnit = chooseTimeTickUnit(((maxTime + padding) - (minTime - padding)) / CHART_GRID_INTERVAL_COUNT);
+        double lowerBound = Math.floor((minTime - padding) / tickUnit) * tickUnit;
+        double upperBound = Math.ceil((maxTime + padding) / tickUnit) * tickUnit;
 
-        priceChartXAxis.setLowerBound(minTime - padding);
-        priceChartXAxis.setUpperBound(maxTime + padding);
-        priceChartXAxis.setTickUnit(Math.max(30, (priceChartXAxis.getUpperBound() - priceChartXAxis.getLowerBound()) / 4));
+        priceChartXAxis.setLowerBound(lowerBound);
+        priceChartXAxis.setUpperBound(Math.max(lowerBound + tickUnit, upperBound));
+        priceChartXAxis.setTickUnit(tickUnit);
     }
 
     private void updatePriceAxis(double minPrice, double maxPrice) {
@@ -318,14 +349,51 @@ public class ProductDetailController {
 
         double lowerBound = Math.max(0, minPrice - padding);
         double upperBound = maxPrice + padding;
+        double tickUnit = chooseNiceTickUnit((upperBound - lowerBound) / CHART_GRID_INTERVAL_COUNT);
 
-        if (Double.compare(lowerBound, upperBound) == 0) {
-            upperBound = lowerBound + 1;
+        lowerBound = Math.max(0, Math.floor(lowerBound / tickUnit) * tickUnit);
+        upperBound = Math.ceil(upperBound / tickUnit) * tickUnit;
+
+        if (Double.compare(lowerBound, upperBound) >= 0) {
+            upperBound = lowerBound + tickUnit;
         }
 
         priceChartYAxis.setLowerBound(lowerBound);
         priceChartYAxis.setUpperBound(upperBound);
-        priceChartYAxis.setTickUnit(Math.max(1, (upperBound - lowerBound) / 4));
+        priceChartYAxis.setTickUnit(tickUnit);
+    }
+
+    private double chooseTimeTickUnit(double targetTickUnit) {
+        for (double tickUnit : CHART_TIME_TICK_UNITS) {
+            if (tickUnit >= targetTickUnit) {
+                return tickUnit;
+            }
+        }
+
+        return Math.ceil(targetTickUnit / 86400) * 86400;
+    }
+
+    private double chooseNiceTickUnit(double targetTickUnit) {
+        if (targetTickUnit <= 0) {
+            return 1;
+        }
+
+        double magnitude = Math.pow(10, Math.floor(Math.log10(targetTickUnit)));
+        double normalizedTickUnit = targetTickUnit / magnitude;
+
+        if (normalizedTickUnit <= 1) {
+            return magnitude;
+        }
+
+        if (normalizedTickUnit <= 2) {
+            return 2 * magnitude;
+        }
+
+        if (normalizedTickUnit <= 5) {
+            return 5 * magnitude;
+        }
+
+        return 10 * magnitude;
     }
 
     private void loadBidHistory() {
@@ -485,16 +553,8 @@ public class ProductDetailController {
             return;
         }
 
-        File imageFile = new File(imagePath);
-        if (!imageFile.exists()) {
-            productImageView.setImage(null);
-            imagePlaceholderLabel.setText("Không tìm thấy file ảnh");
-            imagePlaceholderLabel.setVisible(true);
-            return;
-        }
-
         try {
-            Image image = new Image(imageFile.toURI().toString(), 198, 138, true, true);
+            Image image = ProductImageUtil.loadImage(imagePath, 198, 138);
 
             if (image.isError()) {
                 productImageView.setImage(null);

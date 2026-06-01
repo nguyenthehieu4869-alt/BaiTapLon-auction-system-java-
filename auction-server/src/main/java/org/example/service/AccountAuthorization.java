@@ -5,7 +5,7 @@ import org.example.common.UserRole;
 import java.util.Set;
 
 public final class AccountAuthorization {
-    public static final String ADMIN_AUTHORIZATION_ERROR = "bạn không được uỷ quyền là admin";
+    public static final String ADMIN_AUTHORIZATION_ERROR = "Bạn không được uỷ quyền là admin!";
 
     private static final Set<String> AUTHORIZED_ADMIN_USERNAMES = Set.of(
             "Huyadmin",

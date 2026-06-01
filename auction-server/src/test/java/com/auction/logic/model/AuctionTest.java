@@ -2,9 +2,9 @@ package com.auction.logic.model;
 
 import com.auction.logic.exception.AuctionClosedException;
 import com.auction.logic.exception.InvalidBidException;
+import org.example.common.AuctionTime;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,11 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AuctionTest {
 
     @Test
-    void auctionStartsWithItemStartingPriceAndComingSoonStatus() {
+    void auctionUsesItemStartingPriceAndOpensWhenStartTimePassed() {
         Auction auction = newAuction();
 
         assertEquals(1000, auction.getCurrentPrice());
-        assertEquals(AuctionStatus.COMING_SOON, auction.getStatus());
+        assertEquals(AuctionStatus.OPENING, auction.getStatus());
         assertFalse(auction.hasWinner());
     }
 
@@ -37,10 +37,10 @@ class AuctionTest {
         Auction auction = newAuction();
         Bidder bidder = new Bidder("bidder1");
 
-        auction.start();
-        auction.placeBid(bidder, 1200);
+        BidTransaction bid = auction.placeBid(bidder, 1200);
 
         assertEquals(1200, auction.getCurrentPrice());
+        assertEquals(1200, bid.getBidPrice());
         assertEquals("bidder1", auction.getHighestBidderUsername());
         assertTrue(auction.hasWinner());
         assertEquals(1, auction.getBids().size());
@@ -52,10 +52,9 @@ class AuctionTest {
         Auction auction = new Auction(
                 new Art("Painting", 1000),
                 seller,
-                LocalDateTime.now().plusMinutes(5)
+                AuctionTime.now().minusMinutes(1),
+                AuctionTime.now().plusMinutes(5)
         );
-
-        auction.start();
 
         assertThrows(InvalidBidException.class, () -> auction.placeBid(seller, 1200));
     }
@@ -65,16 +64,56 @@ class AuctionTest {
         Auction auction = newAuction();
         Bidder bidder = new Bidder("bidder1");
 
-        auction.start();
-
         assertThrows(InvalidBidException.class, () -> auction.placeBid(bidder, 900));
     }
 
     @Test
     void cannotBidBeforeAuctionStarts() {
+        Auction auction = new Auction(
+                new Art("Painting", 1000),
+                new Seller("seller1"),
+                AuctionTime.now().plusMinutes(1),
+                AuctionTime.now().plusMinutes(5)
+        );
+        Bidder bidder = new Bidder("bidder1");
+
+        assertThrows(AuctionClosedException.class, () -> auction.placeBid(bidder, 1200));
+    }
+
+    @Test
+    void restoredCurrentPriceIsUsedWhenValidatingBid() {
         Auction auction = newAuction();
         Bidder bidder = new Bidder("bidder1");
 
+        auction.restoreCurrentPrice(1500);
+
+        assertThrows(InvalidBidException.class, () -> auction.placeBid(bidder, 1400));
+    }
+
+    @Test
+    void cannotBidAfterAuctionEnds() {
+        Auction auction = new Auction(
+                new Art("Painting", 1000),
+                new Seller("seller1"),
+                AuctionTime.now().minusMinutes(5),
+                AuctionTime.now().minusMinutes(1)
+        );
+        Bidder bidder = new Bidder("bidder1");
+
+        assertThrows(AuctionClosedException.class, () -> auction.placeBid(bidder, 1200));
+    }
+
+    @Test
+    void manuallyClosedUpcomingAuctionCanBeHydrated() {
+        Auction auction = new Auction(
+                new Art("Painting", 1000),
+                new Seller("seller1"),
+                AuctionTime.now().plusMinutes(5),
+                AuctionTime.now().minusMinutes(1)
+        );
+        Bidder bidder = new Bidder("bidder1");
+
+        assertEquals(AuctionStatus.FINISHED, auction.getStatus());
         assertThrows(AuctionClosedException.class, () -> auction.placeBid(bidder, 1200));
     }
 
@@ -83,7 +122,6 @@ class AuctionTest {
         Auction auction = newAuction();
         Bidder bidder = new Bidder("bidder1");
 
-        auction.start();
         auction.placeBid(bidder, 1200);
 
         assertEquals("bidder1", auction.finish());
@@ -101,7 +139,6 @@ class AuctionTest {
             observedBid.set(bid);
         });
 
-        auction.start();
         auction.placeBid(bidder, 1200);
 
         assertEquals(1200, observedBid.get().getBidPrice());
@@ -112,7 +149,8 @@ class AuctionTest {
         return new Auction(
                 new Art("Painting", 1000),
                 new Seller("seller1"),
-                LocalDateTime.now().plusMinutes(5)
+                AuctionTime.now().minusMinutes(1),
+                AuctionTime.now().plusMinutes(5)
         );
     }
 }

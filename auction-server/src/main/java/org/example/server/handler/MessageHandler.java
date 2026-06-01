@@ -1,6 +1,7 @@
 package org.example.server.handler;
 
 import org.example.common.AuctionTime;
+import org.example.common.ProductImageData;
 import org.example.common.ProductStatus;
 import org.example.common.UserRole;
 import org.example.database.BidDAO;
@@ -284,10 +285,11 @@ public class MessageHandler {
         }
 
         ProductDAO dao = new ProductDAO();
+        String imageReference = validateProductImageReference(request.getImagePath(), false);
         boolean result = dao.addProduct(
                 request.getName(),
                 request.getDescription(),
-                request.getImagePath(),
+                imageReference,
                 request.getStartPrice(),
                 ProductStatus.COMING_SOON,
                 startTime,
@@ -315,18 +317,36 @@ public class MessageHandler {
         return LocalDateTime.parse(value);
     }
 
+    private String validateProductImageReference(String imageReference, boolean allowLegacyPath) {
+        if (imageReference == null || imageReference.isBlank()) {
+            return null;
+        }
+
+        if (ProductImageData.isEmbeddedImage(imageReference)) {
+            ProductImageData.decode(imageReference);
+            return imageReference;
+        }
+
+        if (allowLegacyPath && imageReference.length() <= 500) {
+            return imageReference;
+        }
+
+        throw new IllegalArgumentException("Ảnh sản phẩm phải được tải lên từ phiên bản client mới.");
+    }
+
     private void handleEditProduct(Message msg) {
         requireRole(UserRole.SELLER);
         ProductSaveRequest request = parseData(msg, ProductSaveRequest.class);
 
         ProductDAO dao = new ProductDAO();
+        String imageReference = validateProductImageReference(request.getImagePath(), true);
         boolean result = dao.editProductBySeller(
                 request.getId(),
                 request.getName(),
                 request.getDescription(),
                 request.getStartPrice(),
                 request.getStatus(),
-                request.getImagePath(),
+                imageReference,
                 authenticatedUsername
         );
 
@@ -483,7 +503,7 @@ public class MessageHandler {
 
     private void requireAuthenticated() {
         if (authenticatedUsername == null || authenticatedRole == null) {
-            throw new IllegalArgumentException("Bạn chưa đăng nhập");
+            throw new IllegalArgumentException("Bạn chưa đăng nhập !");
         }
     }
 

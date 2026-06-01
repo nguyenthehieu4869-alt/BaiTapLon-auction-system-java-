@@ -2,6 +2,7 @@ package com.auction.service.remote;
 
 import com.auction.model.Product;
 import com.auction.network.AuctionNetworkClient;
+import com.auction.util.ProductImageUtil;
 import com.google.gson.reflect.TypeToken;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -47,11 +48,21 @@ public class RemoteProductService {
     public boolean addProduct(String name, String description, double startPrice,
                               LocalDateTime startTime, LocalDateTime endTime,
                               String sellerUsername, String imagePath) {
+        lastErrorMessage = null;
+
+        String portableImageReference;
+        try {
+            portableImageReference = ProductImageUtil.toPortableReference(imagePath, false);
+        } catch (Exception e) {
+            lastErrorMessage = e.getMessage();
+            return false;
+        }
+
         ProductSaveRequest request = new ProductSaveRequest(
                 0,
                 name,
                 description,
-                imagePath,
+                portableImageReference,
                 startPrice,
                 ProductStatus.COMING_SOON,
                 startTime.toString(),
@@ -63,16 +74,26 @@ public class RemoteProductService {
                 new Message(MessageType.ADD_PRODUCT, request, true)
         );
 
-        return response.isSuccess();
+        return isSuccessfulMutation(response, "Thêm sản phẩm thất bại.");
     }
 
     public boolean updateProduct(int id, String name, String description,
                                  double startPrice, String status, String imagePath) {
+        lastErrorMessage = null;
+
+        String portableImageReference;
+        try {
+            portableImageReference = ProductImageUtil.toPortableReference(imagePath, true);
+        } catch (Exception e) {
+            lastErrorMessage = e.getMessage();
+            return false;
+        }
+
         ProductSaveRequest request = new ProductSaveRequest(
                 id,
                 name,
                 description,
-                imagePath,
+                portableImageReference,
                 startPrice,
                 status,
                 null,
@@ -84,7 +105,7 @@ public class RemoteProductService {
                 new Message(MessageType.EDIT_PRODUCT, request, true)
         );
 
-        return response.isSuccess();
+        return isSuccessfulMutation(response, "Cập nhật sản phẩm thất bại.");
     }
 
     public boolean deleteProduct(int productId) {
@@ -174,5 +195,16 @@ public class RemoteProductService {
         }
 
         return product;
+    }
+
+    private boolean isSuccessfulMutation(Message response, String fallbackMessage) {
+        if (response != null && response.isSuccess()) {
+            return true;
+        }
+
+        lastErrorMessage = response == null || response.getMessage() == null || response.getMessage().isBlank()
+                ? fallbackMessage
+                : response.getMessage();
+        return false;
     }
 }

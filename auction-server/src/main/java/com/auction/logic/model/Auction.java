@@ -3,6 +3,7 @@ package com.auction.logic.model;
 import com.auction.logic.exception.InvalidBidException;
 import com.auction.logic.exception.AuctionClosedException;
 import com.auction.logic.observer.AuctionObserver;
+import org.example.common.AuctionTime;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ public class Auction extends Entity {
     private final List<BidTransaction> bids = new ArrayList<>();
     private List<AuctionObserver> observers = new ArrayList<>();
 
+    private final LocalDateTime startTime;
     private LocalDateTime endTime;
 
     private AuctionStatus status = AuctionStatus.COMING_SOON;
@@ -27,6 +29,10 @@ public class Auction extends Entity {
     private final ReentrantLock lock = new ReentrantLock();
 
     public Auction(Item item, Seller seller, LocalDateTime endTime) {
+        this(item, seller, AuctionTime.now(), endTime);
+    }
+
+    public Auction(Item item, Seller seller, LocalDateTime startTime, LocalDateTime endTime) {
         if (item == null) {
             throw new IllegalArgumentException("Không tìm thấy sản phẩm");
         }
@@ -35,31 +41,17 @@ public class Auction extends Entity {
             throw new IllegalArgumentException("Không xác định seller account");
         }
 
-        if (endTime == null) {
-            throw new IllegalArgumentException("Vui lòng nhập thời điểm kết thúc !");
-        }
-
-        if (!endTime.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Thời điểm kết thúc phải sau thời điểm hiện tại");
-        }
-
         this.item = item;
         this.seller = seller;
         this.currentPrice = item.getStartingPrice();
+        this.startTime = startTime;
         this.endTime = endTime;
+        refreshStatusByTime();
     }
 
     public void start() throws AuctionClosedException {
-        if (status == AuctionStatus.FINISHED) {
-            throw new AuctionClosedException("Phiên đấu giá đã kết thúc");
-        }
-
-        if (isEnded()) {
-            finish();
-            throw new AuctionClosedException("Phiên đấu giá đã kết thúc");
-        }
-
-        status = AuctionStatus.OPENING;
+        refreshStatusByTime();
+        validateAuctionState();
     }
 
     public void addObserver(AuctionObserver obs) {
@@ -78,7 +70,7 @@ public class Auction extends Entity {
         }
     }
 
-    public void placeBid(User bidder, double bidPrice)
+    public BidTransaction placeBid(User bidder, double bidPrice)
             throws InvalidBidException, AuctionClosedException {
 
         lock.lock();
@@ -91,13 +83,8 @@ public class Auction extends Entity {
                 throw new InvalidBidException("Seller không thể đặt giá sản phẩm của chính mình");
             }
 
+            refreshStatusByTime();
             validateAuctionState();
-
-            if (isEnded()) {
-                finish();
-                throw new AuctionClosedException("Phiên đấu giá đã kết thúc");
-            }
-
             validateBid(bidPrice);
 
             BidTransaction bid = new BidTransaction(bidder, bidPrice);
@@ -107,6 +94,7 @@ public class Auction extends Entity {
             highestBidder = bidder;
 
             notifyObservers(bid);
+            return bid;
 
         } finally {
             lock.unlock();
@@ -133,8 +121,32 @@ public class Auction extends Entity {
         }
     }
 
-    private boolean isEnded() {
-        return !endTime.isAfter(LocalDateTime.now());
+    private void refreshStatusByTime() {
+        if (status == AuctionStatus.FINISHED) {
+            return;
+        }
+
+        LocalDateTime now = AuctionTime.now();
+
+        if (endTime != null && !endTime.isAfter(now)) {
+            status = AuctionStatus.FINISHED;
+        } else if (startTime != null && startTime.isAfter(now)) {
+            status = AuctionStatus.COMING_SOON;
+        } else {
+            status = AuctionStatus.OPENING;
+        }
+    }
+
+    public void restoreCurrentPrice(double currentPrice) {
+        if (!Double.isFinite(currentPrice) || currentPrice <= 0) {
+            throw new IllegalArgumentException("Giá hiện tại không hợp lệ");
+        }
+
+        if (currentPrice < item.getStartingPrice()) {
+            throw new IllegalArgumentException("Giá hiện tại không được thấp hơn giá khởi điểm");
+        }
+
+        this.currentPrice = currentPrice;
     }
 
     public String finish() {
@@ -168,6 +180,7 @@ public class Auction extends Entity {
     }
 
     public AuctionStatus getStatus() {
+        refreshStatusByTime();
         return status;
     }
 
@@ -189,6 +202,10 @@ public class Auction extends Entity {
 
     public LocalDateTime getEndTime() {
         return endTime;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
     }
 
     public List<BidTransaction> getBids() {
