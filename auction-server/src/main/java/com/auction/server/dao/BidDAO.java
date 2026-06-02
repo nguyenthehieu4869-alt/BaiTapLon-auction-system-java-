@@ -142,4 +142,26 @@ public class BidDAO {
 
         return 0;
     }
+
+    public double getHighestBidByBidderForProduct(Connection conn, int productId, String bidderUsername) throws SQLException {
+        String sql = """
+            SELECT COALESCE(MAX(bid_price), 0)
+            FROM bids
+            WHERE product_id = ?
+              AND bidder_username = ?
+            """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.setString(2, bidderUsername);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble(1);
+                }
+            }
+        }
+
+        return 0D;
+    }
 }

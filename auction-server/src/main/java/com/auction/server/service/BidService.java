@@ -49,11 +49,6 @@ public class BidService {
                 return BidResult.failure("Không tìm thấy sản phẩm");
             }
 
-            if (!deductWallet(conn, normalizedBidderUsername, bidPrice)) {
-                conn.rollback();
-                return BidResult.failure("Số dư ví không đủ để đặt giá này");
-            }
-
             Auction auction = auctionMapper.toDomainAuction(product);
             auction.addObserver(new AuctionBidObserver());
 
@@ -63,6 +58,14 @@ public class BidService {
             } catch (InvalidBidException | AuctionClosedException e) {
                 conn.rollback();
                 return BidResult.failure(e.getMessage());
+            }
+
+            double previousHighestBid = bidDAO.getHighestBidByBidderForProduct(conn, productId, normalizedBidderUsername);
+            double additionalDebit = transaction.getBidPrice() - previousHighestBid;
+
+            if (additionalDebit > 0 && !deductWallet(conn, normalizedBidderUsername, additionalDebit)) {
+                conn.rollback();
+                return BidResult.failure("Số dư ví không đủ để đặt giá này");
             }
 
             LocalDateTime now = AuctionTime.now();
