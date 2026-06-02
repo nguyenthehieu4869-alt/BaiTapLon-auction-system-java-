@@ -8,6 +8,7 @@ import com.auction.logic.model.Bidder;
 import org.example.common.AuctionTime;
 import org.example.database.BidDAO;
 import org.example.database.DatabaseManager;
+import org.example.database.UserDAO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,6 +23,7 @@ public class BidService {
 
     private final BidDAO bidDAO = new BidDAO();
     private final DomainAuctionMapper auctionMapper = new DomainAuctionMapper();
+    private final UserDAO userDAO = new UserDAO();
 
     public BidResult placeBid(int productId, String bidderUsername, double bidPrice) {
         if (bidderUsername == null || bidderUsername.isBlank()) {
@@ -45,6 +47,11 @@ public class BidService {
             if (product == null) {
                 conn.rollback();
                 return BidResult.failure("Không tìm thấy sản phẩm");
+            }
+
+            if (!deductWallet(conn, normalizedBidderUsername, bidPrice)) {
+                conn.rollback();
+                return BidResult.failure("Số dư ví không đủ để đặt giá này");
             }
 
             Auction auction = auctionMapper.toDomainAuction(product);
@@ -83,6 +90,35 @@ public class BidService {
         } finally {
             closeQuietly(conn);
         }
+    }
+
+    public boolean addWalletBalance(String username, double amount) {
+        if (username == null || username.isBlank() || !Double.isFinite(amount) || amount <= 0) {
+            return false;
+        }
+
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.getConnection();
+            conn.setAutoCommit(false);
+            boolean updated = userDAO.addWalletBalance(conn, username.trim(), amount);
+            if (!updated) {
+                conn.rollback();
+                return false;
+            }
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            rollbackQuietly(conn);
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeQuietly(conn);
+        }
+    }
+
+    private boolean deductWallet(Connection conn, String username, double amount) throws Exception {
+        return userDAO.deductWalletBalance(conn, username, amount);
     }
 
     private ProductSnapshot lockProduct(Connection conn, int productId) throws SQLException {

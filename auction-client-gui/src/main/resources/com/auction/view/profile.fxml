@@ -20,11 +20,11 @@
     </top>
 
     <center>
-        <VBox spacing="22.0" style="-fx-padding: 6 34 22 34;">
+        <VBox spacing="18.0" style="-fx-padding: 6 34 22 34;">
             <children>
                 <GridPane hgap="16.0" style="-fx-background-color: rgba(7, 46, 43, 0.92); -fx-background-radius: 18; -fx-border-color: rgba(212,175,55,0.42); -fx-border-radius: 18; -fx-border-width: 1.2; -fx-padding: 22;" vgap="16.0">
                     <children>
-                        <Label style="-fx-text-fill: #d4af37; -fx-font-size: 13px; -fx-font-weight: bold;" text="Ten tai khoan" />
+                        <Label style="-fx-text-fill: #d4af37; -fx-font-size: 13px; -fx-font-weight: bold;" text="Tên tài khoản" />
                         <Label fx:id="usernameLabel" maxWidth="Infinity" style="-fx-text-fill: #f8f5ea; -fx-font-size: 16px; -fx-font-weight: bold;" text="-" GridPane.columnIndex="1" />
 
                         <Label style="-fx-text-fill: #d4af37; -fx-font-size: 13px; -fx-font-weight: bold;" text="Email" GridPane.rowIndex="1" />
@@ -34,10 +34,10 @@
                         <RowConstraints minHeight="42.0" />
                         <RowConstraints minHeight="42.0" />
                     </rowConstraints>
-               <columnConstraints>
-                  <ColumnConstraints />
-                  <ColumnConstraints />
-               </columnConstraints>
+                    <columnConstraints>
+                        <ColumnConstraints />
+                        <ColumnConstraints />
+                    </columnConstraints>
                 </GridPane>
 
                 <VBox spacing="8.0" style="-fx-background-color: rgba(212,175,55,0.12); -fx-background-radius: 18; -fx-border-color: rgba(212,175,55,0.42); -fx-border-radius: 18; -fx-border-width: 1.2; -fx-padding: 22;">
@@ -46,13 +46,21 @@
                         <Label fx:id="countValueLabel" style="-fx-text-fill: #ffffff; -fx-font-size: 42px; -fx-font-weight: 900;" text="0" />
                     </children>
                 </VBox>
+
+                <VBox fx:id="walletBox" spacing="8.0" style="-fx-background-color: rgba(27,191,122,0.12); -fx-background-radius: 18; -fx-border-color: rgba(27,191,122,0.42); -fx-border-radius: 18; -fx-border-width: 1.2; -fx-padding: 22;">
+                    <children>
+                        <Label fx:id="walletTitleLabel" style="-fx-text-fill: #1bf17a; -fx-font-size: 14px; -fx-font-weight: bold;" text="Số dư ví điện tử" />
+                        <Label fx:id="walletValueLabel" style="-fx-text-fill: #ffffff; -fx-font-size: 30px; -fx-font-weight: 900;" text="0 VND" />
+                    </children>
+                </VBox>
             </children>
         </VBox>
     </center>
 
     <bottom>
-        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 34 28 34;">
+        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 34 28 34;" spacing="10">
             <children>
+                <Button fx:id="depositButton" onAction="#handleDeposit" prefHeight="40.0" prefWidth="150.0" style="-fx-background-color: #1bf17a; -fx-text-fill: #06211f; -fx-font-weight: bold; -fx-background-radius: 10;" text="Nạp tiền" />
                 <Button onAction="#handleClose" prefHeight="40.0" prefWidth="120.0" style="-fx-background-color: #d4af37; -fx-text-fill: #06211f; -fx-font-weight: bold; -fx-background-radius: 10;" text="Đóng" />
             </children>
         </HBox>

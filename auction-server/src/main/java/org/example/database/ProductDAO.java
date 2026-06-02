@@ -95,24 +95,27 @@ public class ProductDAO {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
-      try (Connection conn = DatabaseManager.getConnection();
-           PreparedStatement ps = conn.prepareStatement(sql)) {
+      try {
+         DatabaseManager.ensureSchema();
 
-         ps.setString(1, name);
-         ps.setString(2, description);
-         ps.setString(3, imagePath);
-         ps.setDouble(4, startPrice);
-         ps.setDouble(5, startPrice);
-         ps.setString(6, ProductStatus.current(startTime, endTime, status));
-         ps.setObject(7, startTime);
-         ps.setObject(8, endTime);
-         ps.setString(9, sellerUsername);
+         try (Connection conn = DatabaseManager.getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-         return ps.executeUpdate() > 0;
+            ps.setString(1, name);
+            ps.setString(2, description);
+            ps.setString(3, imagePath);
+            ps.setDouble(4, startPrice);
+            ps.setDouble(5, startPrice);
+            ps.setString(6, ProductStatus.current(startTime, endTime, status));
+            ps.setObject(7, startTime);
+            ps.setObject(8, endTime);
+            ps.setString(9, sellerUsername);
 
+            return ps.executeUpdate() > 0;
+         }
       } catch (Exception e) {
          e.printStackTrace();
-         return false;
+         throw new IllegalStateException("Kh\u00f4ng th\u00eam \u0111\u01b0\u1ee3c s\u1ea3n ph\u1ea9m v\u00e0o DB: " + e.getMessage(), e);
       }
    }
 
@@ -125,22 +128,25 @@ public class ProductDAO {
             WHERE id = ? AND seller_username = ?
             """;
 
-      try (Connection conn = DatabaseManager.getConnection();
-           PreparedStatement ps = conn.prepareStatement(sql)) {
+      try {
+         DatabaseManager.ensureSchema();
 
-         ps.setString(1, name);
-         ps.setString(2, description);
-         ps.setDouble(3, startPrice);
-         ps.setString(4, ProductStatus.normalize(status));
-         ps.setString(5, imagePath);
-         ps.setInt(6, id);
-         ps.setString(7, sellerUsername);
+         try (Connection conn = DatabaseManager.getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-         return ps.executeUpdate() > 0;
+            ps.setString(1, name);
+            ps.setString(2, description);
+            ps.setDouble(3, startPrice);
+            ps.setString(4, ProductStatus.normalize(status));
+            ps.setString(5, imagePath);
+            ps.setInt(6, id);
+            ps.setString(7, sellerUsername);
 
+            return ps.executeUpdate() > 0;
+         }
       } catch (Exception e) {
          e.printStackTrace();
-         return false;
+         throw new IllegalStateException("Kh\u00f4ng c\u1eadp nh\u1eadt \u0111\u01b0\u1ee3c s\u1ea3n ph\u1ea9m trong DB: " + e.getMessage(), e);
       }
    }
 

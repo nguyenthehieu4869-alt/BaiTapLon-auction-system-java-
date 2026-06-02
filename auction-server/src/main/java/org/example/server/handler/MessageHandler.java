@@ -49,51 +49,42 @@ public class MessageHandler {
                 case LOGIN:
                     handleLogin(msg);
                     break;
-
                 case REGISTER:
                     handleRegister(msg);
                     break;
-
                 case GET_USER_PROFILE:
                     handleGetUserProfile(msg);
                     break;
-
+                case UPDATE_WALLET:
+                    handleUpdateWallet(msg);
+                    break;
                 case GET_PRODUCTS:
                     handleGetProducts(msg);
                     break;
-
                 case GET_PRODUCTS_BY_SELLER:
                     handleGetProductsBySeller(msg);
                     break;
-
                 case ADD_PRODUCT:
                     handleAddProduct(msg);
                     break;
-
                 case EDIT_PRODUCT:
                     handleEditProduct(msg);
                     break;
-
                 case DELETE_PRODUCT:
                     handleDeleteProduct(msg);
                     break;
-
                 case CLOSE_AUCTION:
                     handleCloseAuction(msg);
                     break;
-
                 case PLACE_BID:
                     handlePlaceBid(msg);
                     break;
-
                 case GET_BID_HISTORY:
                     handleGetBidHistory(msg);
                     break;
-
                 case GET_WINNER:
                     handleGetWinner(msg);
                     break;
-
                 default:
                     sendError(msg, "Không hiểu message type: " + msg.getType());
                     break;
@@ -141,12 +132,7 @@ public class MessageHandler {
         AccountAuthorization.validateRegistration(username, password, request.getRole());
 
         UserDAO dao = new UserDAO();
-        boolean result = dao.register(
-                username,
-                email,
-                password,
-                request.getRole()
-        );
+        boolean result = dao.register(username, email, password, request.getRole());
 
         send(msg, new Message(
                 result ? MessageType.REGISTER_SUCCESS : MessageType.REGISTER_FAIL,
@@ -180,14 +166,26 @@ public class MessageHandler {
                 username,
                 email,
                 bidDAO.countWonAuctionsByBidder(username),
-                productDAO.countProductsBySeller(username)
+                productDAO.countProductsBySeller(username),
+                userDAO.getWalletBalance(username)
         );
 
+        send(msg, new Message(MessageType.USER_PROFILE, profile, true, "Load profile thành công"));
+    }
+
+    private void handleUpdateWallet(Message msg) {
+        requireRole(UserRole.BIDDER);
+        Map<?, ?> data = getDataMap(msg);
+        double amount = getDouble(data, "amount");
+
+        BidService bidService = new BidService();
+        boolean success = bidService.addWalletBalance(authenticatedUsername, amount);
+
         send(msg, new Message(
-                MessageType.USER_PROFILE,
-                profile,
-                true,
-                "Load profile thành công"
+                success ? MessageType.UPDATE_WALLET_SUCCESS : MessageType.UPDATE_WALLET_FAIL,
+                null,
+                success,
+                success ? "Nạp tiền vào ví thành công" : "Nạp tiền vào ví thất bại"
         ));
     }
 
@@ -196,12 +194,7 @@ public class MessageHandler {
         ProductDAO dao = new ProductDAO();
         List<Product> products = dao.getAllProducts();
 
-        send(msg, new Message(
-                MessageType.PRODUCT_LIST,
-                products,
-                true,
-                "Load sản phẩm thành công"
-        ));
+        send(msg, new Message(MessageType.PRODUCT_LIST, products, true, "Load sản phẩm thành công"));
     }
 
     private void handlePlaceBid(Message msg) {
@@ -209,19 +202,10 @@ public class MessageHandler {
         BidRequest request = parseData(msg, BidRequest.class);
 
         BidService service = new BidService();
-        BidResult result = service.placeBid(
-                request.getProductId(),
-                authenticatedUsername,
-                request.getBidPrice()
-        );
+        BidResult result = service.placeBid(request.getProductId(), authenticatedUsername, request.getBidPrice());
 
         if (!result.isSuccess()) {
-            send(msg, new Message(
-                    MessageType.BID_FAIL,
-                    null,
-                    false,
-                    result.getMessage()
-            ));
+            send(msg, new Message(MessageType.BID_FAIL, null, false, result.getMessage()));
             return;
         }
 
@@ -232,12 +216,7 @@ public class MessageHandler {
         updateData.put("currentPrice", result.getCurrentPrice());
         updateData.put("endTime", result.getEndTime() == null ? null : result.getEndTime().toString());
 
-        send(msg, new Message(
-                MessageType.BID_SUCCESS,
-                updateData,
-                true,
-                result.getMessage()
-        ));
+        send(msg, new Message(MessageType.BID_SUCCESS, updateData, true, result.getMessage()));
 
         ServerManager.broadcast(Protocol.encode(new Message(
                 MessageType.BID_UPDATE,
@@ -256,12 +235,7 @@ public class MessageHandler {
         ProductDAO dao = new ProductDAO();
         List<Product> products = dao.getProductsBySeller(sellerUsername);
 
-        send(msg, new Message(
-                MessageType.PRODUCT_LIST,
-                products,
-                true,
-                "Load sản phẩm seller thành công"
-        ));
+        send(msg, new Message(MessageType.PRODUCT_LIST, products, true, "Load sản phẩm seller thành công"));
     }
 
     private void handleAddProduct(Message msg) {
@@ -277,7 +251,7 @@ public class MessageHandler {
         }
 
         if (!endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException("Thoi diem ket thuc phai sau thoi diem bat dau");
+            throw new IllegalArgumentException("Thời điểm kết thúc phải sau thời điểm bắt đầu");
         }
 
         if (!endTime.isAfter(now)) {
@@ -286,23 +260,9 @@ public class MessageHandler {
 
         ProductDAO dao = new ProductDAO();
         String imageReference = validateProductImageReference(request.getImagePath(), false);
-        boolean result = dao.addProduct(
-                request.getName(),
-                request.getDescription(),
-                imageReference,
-                request.getStartPrice(),
-                ProductStatus.COMING_SOON,
-                startTime,
-                endTime,
-                authenticatedUsername
-        );
+        boolean result = dao.addProduct(request.getName(), request.getDescription(), imageReference, request.getStartPrice(), ProductStatus.COMING_SOON, startTime, endTime, authenticatedUsername);
 
-        send(msg, new Message(
-                result ? MessageType.ADD_PRODUCT : MessageType.ERROR,
-                null,
-                result,
-                result ? "Thêm sản phẩm thành công!" : "Thêm sản phẩm thất bại"
-        ));
+        send(msg, new Message(result ? MessageType.ADD_PRODUCT : MessageType.ERROR, null, result, result ? "Thêm sản phẩm thành công!" : "Thêm sản phẩm thất bại"));
 
         if (result) {
             broadcastProductChanged("ADD_PRODUCT", null);
@@ -340,22 +300,9 @@ public class MessageHandler {
 
         ProductDAO dao = new ProductDAO();
         String imageReference = validateProductImageReference(request.getImagePath(), true);
-        boolean result = dao.editProductBySeller(
-                request.getId(),
-                request.getName(),
-                request.getDescription(),
-                request.getStartPrice(),
-                request.getStatus(),
-                imageReference,
-                authenticatedUsername
-        );
+        boolean result = dao.editProductBySeller(request.getId(), request.getName(), request.getDescription(), request.getStartPrice(), request.getStatus(), imageReference, authenticatedUsername);
 
-        send(msg, new Message(
-                result ? MessageType.EDIT_PRODUCT : MessageType.ERROR,
-                null,
-                result,
-                result ? "Cập nhật thành công!" : "Cập nhật sản phẩm thất bại!"
-        ));
+        send(msg, new Message(result ? MessageType.EDIT_PRODUCT : MessageType.ERROR, null, result, result ? "Cập nhật thành công!" : "Cập nhật sản phẩm thất bại!"));
 
         if (result) {
             broadcastProductChanged("EDIT_PRODUCT", request.getId());
@@ -370,12 +317,7 @@ public class MessageHandler {
         ProductDAO dao = new ProductDAO();
         boolean result = dao.deleteProduct(productId);
 
-        send(msg, new Message(
-                result ? MessageType.DELETE_PRODUCT : MessageType.ERROR,
-                null,
-                result,
-                result ? "Xoá sản phẩm thành công!" : "Xoá sản phẩm thất bại"
-        ));
+        send(msg, new Message(result ? MessageType.DELETE_PRODUCT : MessageType.ERROR, null, result, result ? "Xoá sản phẩm thành công!" : "Xoá sản phẩm thất bại"));
 
         if (result) {
             broadcastProductChanged("DELETE_PRODUCT", productId);
@@ -390,12 +332,7 @@ public class MessageHandler {
         ProductDAO dao = new ProductDAO();
         boolean result = dao.closeAuction(productId);
 
-        send(msg, new Message(
-                result ? MessageType.CLOSE_AUCTION : MessageType.ERROR,
-                null,
-                result,
-                result ? "Đóng phiên thành công!" : "Đóng phiên thất bại"
-        ));
+        send(msg, new Message(result ? MessageType.CLOSE_AUCTION : MessageType.ERROR, null, result, result ? "Đóng phiên thành công!" : "Đóng phiên thất bại"));
 
         if (result) {
             broadcastProductChanged("CLOSE_AUCTION", productId);
@@ -410,12 +347,7 @@ public class MessageHandler {
             data.put("productId", productId);
         }
 
-        ServerManager.broadcast(Protocol.encode(new Message(
-                MessageType.PRODUCT_CHANGED,
-                data,
-                true,
-                "Product list changed"
-        )));
+        ServerManager.broadcast(Protocol.encode(new Message(MessageType.PRODUCT_CHANGED, data, true, "Product list changed")));
     }
 
     private void handleGetBidHistory(Message msg) {
@@ -424,13 +356,7 @@ public class MessageHandler {
         int productId = getInt(data, "productId");
 
         BidDAO dao = new BidDAO();
-
-        send(msg, new Message(
-                MessageType.BID_HISTORY,
-                dao.getBidsByProductId(productId),
-                true,
-                "Load lịch sử bid thành công!"
-        ));
+        send(msg, new Message(MessageType.BID_HISTORY, dao.getBidsByProductId(productId), true, "Load lịch sử bid thành công!"));
     }
 
     private void handleGetWinner(Message msg) {
@@ -441,12 +367,7 @@ public class MessageHandler {
         BidDAO dao = new BidDAO();
         String winner = dao.getWinnerUsernameByProductId(productId);
 
-        send(msg, new Message(
-                MessageType.WINNER_RESULT,
-                winner,
-                true,
-                "Load winner thành công"
-        ));
+        send(msg, new Message(MessageType.WINNER_RESULT, winner, true, "Load winner thành công"));
     }
 
     private <T> T parseData(Message msg, Class<T> clazz) {
@@ -454,15 +375,10 @@ public class MessageHandler {
             throw new IllegalArgumentException("Thiếu dữ liệu request");
         }
 
-        T value = Protocol.gson().fromJson(
-                Protocol.gson().toJson(msg.getData()),
-                clazz
-        );
-
+        T value = Protocol.gson().fromJson(Protocol.gson().toJson(msg.getData()), clazz);
         if (value == null) {
             throw new IllegalArgumentException("Dữ liệu request không hợp lệ");
         }
-
         return value;
     }
 
@@ -470,7 +386,6 @@ public class MessageHandler {
         if (!(msg.getData() instanceof Map<?, ?> data)) {
             throw new IllegalArgumentException("Dữ liệu request không hợp lệ");
         }
-
         return data;
     }
 
@@ -481,15 +396,15 @@ public class MessageHandler {
 
     private int getInt(Map<?, ?> data, String key) {
         Object value = data.get(key);
+        if (value instanceof Number number) return number.intValue();
+        if (value instanceof String text && !text.isBlank()) return Integer.parseInt(text);
+        throw new IllegalArgumentException("Thiếu hoặc sai trường: " + key);
+    }
 
-        if (value instanceof Number number) {
-            return number.intValue();
-        }
-
-        if (value instanceof String text && !text.isBlank()) {
-            return Integer.parseInt(text);
-        }
-
+    private double getDouble(Map<?, ?> data, String key) {
+        Object value = data.get(key);
+        if (value instanceof Number number) return number.doubleValue();
+        if (value instanceof String text && !text.isBlank()) return Double.parseDouble(text);
         throw new IllegalArgumentException("Thiếu hoặc sai trường: " + key);
     }
 
@@ -497,7 +412,6 @@ public class MessageHandler {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(message);
         }
-
         return value.trim();
     }
 
@@ -509,26 +423,19 @@ public class MessageHandler {
 
     private void requireRole(UserRole requiredRole) {
         requireAuthenticated();
-
         if (authenticatedRole != requiredRole) {
             throw new IllegalArgumentException("Tài khoản không có quyền " + requiredRole.name());
         }
     }
 
     private void sendError(Message request, String message) {
-        send(request, new Message(
-                MessageType.ERROR,
-                null,
-                false,
-                message
-        ));
+        send(request, new Message(MessageType.ERROR, null, false, message));
     }
 
     private void send(Message request, Message response) {
         if (request != null) {
             response.setRequestId(request.getRequestId());
         }
-
         if (out != null) {
             out.println(Protocol.encode(response));
         }

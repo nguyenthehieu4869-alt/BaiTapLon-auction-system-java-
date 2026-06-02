@@ -19,6 +19,7 @@ public class DatabaseManager {
     private static final String URL = getConfig("db.url", "AUCTION_DB_URL", "jdbc:mysql://localhost:3306/auction_db");
     private static final String USER = getConfig("db.user", "AUCTION_DB_USER", "root");
     private static final String PASS = getConfig("db.password", "AUCTION_DB_PASSWORD", "");
+    private static volatile boolean schemaEnsured;
 
     public static Connection getConnection() throws Exception {
         Connection conn = DriverManager.getConnection(URL, USER, PASS);
@@ -26,7 +27,11 @@ public class DatabaseManager {
         return conn;
     }
 
-    public static void ensureSchema() throws Exception {
+    public static synchronized void ensureSchema() throws Exception {
+        if (schemaEnsured) {
+            return;
+        }
+
         String columnTypeSql = """
                 SELECT DATA_TYPE
                 FROM INFORMATION_SCHEMA.COLUMNS
@@ -43,6 +48,7 @@ public class DatabaseManager {
             }
 
             if ("longtext".equalsIgnoreCase(rs.getString("DATA_TYPE"))) {
+                schemaEnsured = true;
                 return;
             }
         }
@@ -50,6 +56,7 @@ public class DatabaseManager {
         try (Connection conn = getConnection();
              Statement statement = conn.createStatement()) {
             statement.execute("ALTER TABLE products MODIFY COLUMN image_path LONGTEXT NULL");
+            schemaEnsured = true;
         }
     }
 

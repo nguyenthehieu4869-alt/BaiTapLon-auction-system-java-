@@ -28,7 +28,7 @@ public class UserDAO {
     }
 
     public boolean register(String username, String email, String password, UserRole role) {
-        String sql = "INSERT INTO users(username, email, password, role) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO users(username, email, password, role, wallet_balance) VALUES (?, ?, ?, ?, 0)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -65,5 +65,45 @@ public class UserDAO {
         }
 
         return null;
+    }
+
+    public double getWalletBalance(String username) {
+        String sql = "SELECT wallet_balance FROM users WHERE username = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("wallet_balance");
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0D;
+    }
+
+    public boolean addWalletBalance(Connection conn, String username, double amount) throws Exception {
+        String sql = "UPDATE users SET wallet_balance = wallet_balance + ? WHERE username = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, amount);
+            ps.setString(2, username);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean deductWalletBalance(Connection conn, String username, double amount) throws Exception {
+        String sql = "UPDATE users SET wallet_balance = wallet_balance - ? WHERE username = ? AND wallet_balance >= ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, amount);
+            ps.setString(2, username);
+            ps.setDouble(3, amount);
+            return ps.executeUpdate() > 0;
+        }
     }
 }

@@ -28,6 +28,18 @@ class ProductImageDataTest {
     }
 
     @Test
+    void acceptsImageWhoseEncodedPayloadExceedsSqlTextLimit() throws Exception {
+        byte[] imageBytes = new byte[70_000];
+        Path imageFile = tempDir.resolve("large-but-supported.png");
+        Files.write(imageFile, imageBytes);
+
+        String imageReference = ProductImageData.fromFile(imageFile.toFile());
+
+        assertTrue(imageReference.length() > 65_535);
+        assertArrayEquals(imageBytes, ProductImageData.decode(imageReference));
+    }
+
+    @Test
     void rejectsFileAboveSizeLimit() throws Exception {
         Path imageFile = tempDir.resolve("large.jpg");
         Files.write(imageFile, new byte[ProductImageData.MAX_IMAGE_BYTES + 1]);

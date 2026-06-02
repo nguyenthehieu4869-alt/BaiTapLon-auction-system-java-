@@ -40,10 +40,9 @@ public class ClientHandler extends Thread {
             MessageHandler handler = new MessageHandler(out);
 
             while ((line = in.readLine()) != null) {
-                System.out.println("Message: " + line);
-
                 try {
                     Message msg = Protocol.decode(line);
+                    System.out.println("Message: type=" + msg.getType() + ", requestId=" + msg.getRequestId());
                     handler.handle(msg);
                 } catch (Exception e) {
                     e.printStackTrace();

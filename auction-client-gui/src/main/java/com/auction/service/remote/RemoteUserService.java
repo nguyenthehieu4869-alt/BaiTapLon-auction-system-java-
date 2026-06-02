@@ -66,6 +66,24 @@ public class RemoteUserService {
         return new ProfileResult(true, "Load profile thành công", profile);
     }
 
+    public WalletResult depositWallet(double amount) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("amount", amount);
+
+        Message response = AuctionNetworkClient.getInstance().sendAndWait(
+                new Message(MessageType.UPDATE_WALLET, data, true)
+        );
+
+        if (response == null) {
+            return new WalletResult(false, "Không nhận được phản hồi từ server!");
+        }
+
+        return new WalletResult(response.isSuccess(),
+                response.getMessage() == null || response.getMessage().isBlank()
+                        ? (response.isSuccess() ? "Nạp tiền vào ví thành công" : "Nạp tiền vào ví thất bại")
+                        : response.getMessage());
+    }
+
     private AuthResult toAuthResult(Message response, String fallbackMessage, boolean expectLoginResponse) {
         if (response == null) {
             return new AuthResult(false, "Không nhận được phản hồi từ server!");
@@ -143,6 +161,24 @@ public class RemoteUserService {
 
         public UserProfileDTO getProfile() {
             return profile;
+        }
+    }
+
+    public static class WalletResult {
+        private final boolean success;
+        private final String message;
+
+        public WalletResult(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public String getMessage() {
+            return message;
         }
     }
 }
