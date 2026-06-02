@@ -1,14 +1,14 @@
 package com.auction.service.remote;
 
 import com.auction.network.AuctionNetworkClient;
-import org.example.common.UserRole;
-import org.example.network.dto.LoginRequest;
-import org.example.network.dto.LoginResponse;
-import org.example.network.dto.RegisterRequest;
-import org.example.network.dto.UserProfileDTO;
-import org.example.network.protocol.Message;
-import org.example.network.protocol.MessageType;
-import org.example.network.protocol.Protocol;
+import com.auction.common.UserRole;
+import com.auction.common.network.dto.LoginRequest;
+import com.auction.common.network.dto.LoginResponse;
+import com.auction.common.network.dto.RegisterRequest;
+import com.auction.common.network.dto.UserProfileDTO;
+import com.auction.common.network.protocol.Message;
+import com.auction.common.network.protocol.MessageType;
+import com.auction.common.network.protocol.Protocol;
 
 import java.util.HashMap;
 import java.util.Map;

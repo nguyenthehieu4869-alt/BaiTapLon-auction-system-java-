@@ -5,7 +5,7 @@ import com.auction.util.AlertUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
-import org.example.network.dto.UserProfileDTO;
+import com.auction.common.network.dto.UserProfileDTO;
 
 public class ProfileController {
     public enum ProfileMode {

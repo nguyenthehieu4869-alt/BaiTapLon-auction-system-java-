@@ -6,12 +6,12 @@ import com.auction.util.ProductImageUtil;
 import com.google.gson.reflect.TypeToken;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.example.common.ProductStatus;
-import org.example.network.dto.ProductDTO;
-import org.example.network.dto.ProductSaveRequest;
-import org.example.network.protocol.Message;
-import org.example.network.protocol.MessageType;
-import org.example.network.protocol.Protocol;
+import com.auction.common.ProductStatus;
+import com.auction.common.network.dto.ProductDTO;
+import com.auction.common.network.dto.ProductSaveRequest;
+import com.auction.common.network.protocol.Message;
+import com.auction.common.network.protocol.MessageType;
+import com.auction.common.network.protocol.Protocol;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;

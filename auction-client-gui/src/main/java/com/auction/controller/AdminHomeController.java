@@ -19,8 +19,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import org.example.common.AuctionTime;
-import org.example.common.ProductStatus;
+import com.auction.common.AuctionTime;
+import com.auction.common.ProductStatus;
 
 import java.time.LocalDateTime;
 

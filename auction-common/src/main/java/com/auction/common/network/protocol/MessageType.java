@@ -1,0 +1,37 @@
+package com.auction.common.network.protocol;
+
+public enum MessageType {
+    LOGIN,
+    LOGIN_SUCCESS,
+    LOGIN_FAIL,
+
+    REGISTER,
+    REGISTER_SUCCESS,
+    REGISTER_FAIL,
+
+    GET_USER_PROFILE,
+    USER_PROFILE,
+
+    GET_PRODUCTS,
+    GET_PRODUCTS_BY_SELLER,
+    PRODUCT_LIST,
+    PRODUCT_CHANGED,
+
+    ADD_PRODUCT,
+    EDIT_PRODUCT,
+    DELETE_PRODUCT,
+    CLOSE_AUCTION,
+
+    PLACE_BID,
+    BID_SUCCESS,
+    BID_FAIL,
+    BID_UPDATE,
+
+    GET_BID_HISTORY,
+    BID_HISTORY,
+
+    GET_WINNER,
+    WINNER_RESULT,
+
+    ERROR
+}

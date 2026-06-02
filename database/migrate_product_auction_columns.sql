@@ -1,0 +1,33 @@
+USE auction_db;
+
+ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS image_path LONGTEXT NULL;
+
+ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS current_price DOUBLE NOT NULL DEFAULT 0;
+
+ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS start_time DATETIME NULL;
+
+ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS end_time DATETIME NULL;
+
+ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS seller_username VARCHAR(50) NULL;
+
+UPDATE products
+SET current_price = start_price
+WHERE current_price = 0 OR current_price IS NULL;
+
+UPDATE products
+SET status = CASE
+    WHEN UPPER(REPLACE(REPLACE(status, '_', ''), ' ', '')) = 'COMINGSOON' THEN 'COMING SOON'
+    WHEN UPPER(status) IN ('FINISHED', 'CLOSED', 'CLOSE', 'ENDED', 'DONE', 'DELETED') THEN 'FINISHED'
+    ELSE 'OPENING'
+END
+WHERE status IS NULL
+   OR status NOT IN ('OPENING', 'FINISHED', 'COMING SOON');
+
+ALTER TABLE products
+    MODIFY COLUMN image_path LONGTEXT NULL,
+    MODIFY COLUMN status ENUM('OPENING', 'FINISHED', 'COMING SOON') NOT NULL DEFAULT 'OPENING';

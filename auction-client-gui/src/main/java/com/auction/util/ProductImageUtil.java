@@ -1,7 +1,7 @@
 package com.auction.util;
 
 import javafx.scene.image.Image;
-import org.example.common.ProductImageData;
+import com.auction.common.ProductImageData;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

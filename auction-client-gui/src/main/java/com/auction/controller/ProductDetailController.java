@@ -30,8 +30,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import org.example.common.AuctionTime;
-import org.example.common.ProductStatus;
+import com.auction.common.AuctionTime;
+import com.auction.common.ProductStatus;
 
 import java.text.NumberFormat;
 import java.time.Instant;
@@ -449,7 +449,7 @@ public class ProductDetailController {
         placeBidButton.setDisable(unavailable);
     }
 
-    private void handleBidUpdate(org.example.network.protocol.Message message) {
+    private void handleBidUpdate(com.auction.common.network.protocol.Message message) {
         if (message == null || message.getData() == null) {
             return;
         }

@@ -23,8 +23,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.common.AuctionTime;
-import org.example.common.ProductStatus;
+import com.auction.common.AuctionTime;
+import com.auction.common.ProductStatus;
 
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;

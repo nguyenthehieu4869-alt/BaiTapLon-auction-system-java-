@@ -10,7 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import org.example.common.UserRole;
+import com.auction.common.UserRole;
 
 public class LoginController {
     private static final String BIDDER_HOME_FXML = "/com/auction/view/home.fxml";

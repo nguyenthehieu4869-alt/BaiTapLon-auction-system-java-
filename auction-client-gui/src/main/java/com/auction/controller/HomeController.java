@@ -25,8 +25,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.example.common.AuctionTime;
-import org.example.common.ProductStatus;
+import com.auction.common.AuctionTime;
+import com.auction.common.ProductStatus;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -212,7 +212,7 @@ public class HomeController {
         openProfile(ProfileController.ProfileMode.BIDDER, "Bidder Profile");
     }
 
-    private void handleBidUpdate(org.example.network.protocol.Message message) {
+    private void handleBidUpdate(com.auction.common.network.protocol.Message message) {
         if (message == null || message.getData() == null || productTable == null) {
             return;
         }

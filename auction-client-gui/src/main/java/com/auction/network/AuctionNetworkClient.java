@@ -1,9 +1,9 @@
 package com.auction.network;
 
 import javafx.application.Platform;
-import org.example.network.protocol.Message;
-import org.example.network.protocol.MessageType;
-import org.example.network.protocol.Protocol;
+import com.auction.common.network.protocol.Message;
+import com.auction.common.network.protocol.MessageType;
+import com.auction.common.network.protocol.Protocol;
 
 import java.io.BufferedReader;
 import java.io.IOException;
