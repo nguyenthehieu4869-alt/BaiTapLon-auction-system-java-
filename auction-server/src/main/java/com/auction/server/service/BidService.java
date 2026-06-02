@@ -65,7 +65,7 @@ public class BidService {
 
             if (additionalDebit > 0 && !deductWallet(conn, normalizedBidderUsername, additionalDebit)) {
                 conn.rollback();
-                return BidResult.failure("Số dư ví không đủ để đặt giá này");
+                return BidResult.failure("Số dư ví không đủ,vui lòng nạp thêm !");
             }
 
             LocalDateTime now = AuctionTime.now();
