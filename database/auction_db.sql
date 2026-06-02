@@ -7,7 +7,8 @@ CREATE TABLE users (
                        username VARCHAR(50) NOT NULL UNIQUE,
                        email VARCHAR(100) NOT NULL UNIQUE,
                        password VARCHAR(100) NOT NULL,
-                       role ENUM('BIDDER', 'SELLER', 'ADMIN') NOT NULL
+                       role ENUM('BIDDER', 'SELLER', 'ADMIN') NOT NULL,
+                       wallet_balance DOUBLE NOT NULL DEFAULT 0
 );
 
 CREATE TABLE products (

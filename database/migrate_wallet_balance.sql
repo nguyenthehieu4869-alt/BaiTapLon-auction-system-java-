@@ -1,0 +1,4 @@
+USE auction_db;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS wallet_balance DOUBLE NOT NULL DEFAULT 0;

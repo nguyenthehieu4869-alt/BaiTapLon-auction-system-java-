@@ -7,11 +7,11 @@ import com.auction.service.BidResult;
 import com.google.gson.reflect.TypeToken;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.example.network.dto.BidDTO;
-import org.example.network.dto.BidRequest;
-import org.example.network.protocol.Message;
-import org.example.network.protocol.MessageType;
-import org.example.network.protocol.Protocol;
+import com.auction.common.network.dto.BidDTO;
+import com.auction.common.network.dto.BidRequest;
+import com.auction.common.network.protocol.Message;
+import com.auction.common.network.protocol.MessageType;
+import com.auction.common.network.protocol.Protocol;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;

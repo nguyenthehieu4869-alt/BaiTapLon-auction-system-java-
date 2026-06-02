@@ -8,7 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.stage.Stage;
-import org.example.network.dto.UserProfileDTO;
+import com.auction.common.network.dto.UserProfileDTO;
 
 public class ProfileController {
     public enum ProfileMode {

@@ -11,7 +11,7 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Popup;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import org.example.network.protocol.Message;
+import com.auction.common.network.protocol.Message;
 
 import java.util.ArrayList;
 import java.util.List;
