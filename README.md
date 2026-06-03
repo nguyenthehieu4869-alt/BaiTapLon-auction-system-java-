@@ -229,7 +229,7 @@ mvnw.cmd -ntp -f auction-client-gui/pom.xml clean javafx:run
 
 ## 7. Link Báo Cáo PDF Và Video Demo
 
-- **Báo Cáo PDF:** [Cập nhật link]
+- **Báo Cáo PDF:** [Link báo cáo](https://drive.google.com/file/d/1NID7gbwPhRT03aViPHWoIbO5vEPxOG5X/view?usp=sharing)
 - **Video Demo:** https://youtu.be/I1jSCyBltM0
 
 ---
