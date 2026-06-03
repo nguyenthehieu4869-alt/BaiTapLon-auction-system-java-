@@ -1,204 +1,111 @@
-# BÁO CÁO BÀI TẬP LỚN: HỆ THỐNG ĐẤU GIÁ TRỰC TUYẾN
+# Hệ Thống Đấu Giá Trực Tuyến
 
-**Nhóm 14 - Lập trình Nâng cao (LTNC)**
+## 1. Mô Tả Bài Toán Và Phạm Vi Hệ Thống
 
----
+Hệ thống đấu giá trực tuyến là một ứng dụng client-server cho phép người dùng tham gia các phiên đấu giá sản phẩm. Hệ thống hỗ trợ nhiều vai trò người dùng (BIDDER, SELLER, ADMIN), quản lý phiên đấu giá, đặt giá, quản lý ví điện tử và theo dõi lịch sử.
 
-## 1. GIỚI THIỆU MỤC TIÊU VÀ PHẠM VI THỰC HIỆN
-
-### 1.1 Mục tiêu
-
-Xây dựng một hệ thống đấu giá trực tuyến đầy đủ chức năng, áp dụng kiến trúc client-server với giao tiếp qua socket, hỗ trợ đa người dùng, quản lý phiên đấu giá, ví điện tử, tự động đặt giá và các tính năng nâng cao như anti-sniping, realtime notification.
-
-### 1.2 Phạm vi hệ thống
-
-Hệ thống bao gồm các luồng chính:
-- **Xác thực & Phân quyền**: Đăng ký, đăng nhập, quản lý phiên đăng nhập (token-based)
-- **Quản lý Phiên Đấu Giá**: Tạo, sửa, xóa, theo dõi trạng thái phiên (OPEN → RUNNING → FINISHED → PAID/CANCELED)
-- **Đặt Giá & Tự động Đặt Giá**: Đặt giá real-time, luật tự động đặt giá với logic ưu tiên
-- **Ví Điện tử & Thanh toán**: Quản lý số dư, giữ tiền (reserve), thanh toán, hoàn tiền
-- **Thông Báo Real-time**: Hệ thống thông báo cho người dùng về tình trạng phiên và bid
-- **Quản Trị**: Admin quản lý tài khoản, phiên, thông báo
+**Phạm vi hệ thống:**
+- Xác thực người dùng (Đăng ký, Đăng nhập)
+- Quản lý sản phẩm (Tạo, chỉnh sửa, xoá, đóng phiên đấu giá)
+- Đặt giá và lịch sử đặt giá
+- Quản lý ví điện tử (Nạp tiền, trừ tiền)
+- Hỗ trợ đa người dùng concurrent
+- Real-time cập nhật khi có bid mới
 
 ---
 
-## 2. KIẾN TRÚC TỔNG THỂ CỦA HỆ THỐNG
+## 2. Công Nghệ Sử Dụng, Môi Trường Chạy Và Yêu Cầu Cài Đặt
 
-### 2.1 Sơ đồ kiến trúc
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CLIENT LAYER (JavaFX GUI)                     │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  GUI Screens (FXML)                                       │  │
-│  │  - Login/Register, Auction List, Auction Detail           │  │
-│  │  - Bidding, Wallet, Admin Dashboard                       │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                           ↕ (Socket)                             │
-└─────────────────────────────────────────────────────────────────┘
-                    ↓ TCP (Cloud Server)
-┌─────────────────────────────────────────────────────────────────┐
-│                  SERVER LAYER (Socket Server)                    │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  Request Handler (ClientHandler threads)                 │  │
-│  │  Session Manager & Token Validation                      │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  Business Logic Services                                 │  │
-│  │  ├─ UserService, AuctionService, BidService              │  │
-│  │  ├─ WalletService, NotificationService                   │  │
-│  │  └─ SchedulerService (background tasks)                  │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  Data Access Layer (DAO)                                 │  │
-│  │  ├─ UserDAO, AuctionDAO, BidDAO, AutoBidDAO              │  │
-│  │  ├─ WalletDAO, NotificationDAO                           │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                            ↓ JDBC
-┌─────────────────────────────────────────────────────────────────┐
-│              DATABASE LAYER (MySQL / Cloud DB)                   │
-│  Tables: users, auctions, bids, auto_bids, wallets,             │
-│          topup_transactions, wallet_transactions, notifications  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 2.2 Mô tả kiến trúc
-
-**Client Layer (JavaFX)**
-- Giao diện dùng JavaFX, FXML, CSS - không truy cập DB trực tiếp
-- Gửi request qua socket đến cloud server, nhận response
-- Hỗ trợ cấu hình server qua: `config.properties` → environment variable → system property
-- Tự động kết nối cloud server `40.83.76.228:9999`
-
-**Server Layer (Socket)**
-- Lắng nghe port (mặc định 9999), xử lý multiple client qua thread pool
-- Mỗi client connection tạo một `ClientHandler` thread riêng
-- Session Manager kiểm tra token trước thực hiện action nhạy cảm
-- Hỗ trợ định cấu hình qua environment variable `AUCTION_SERVER_HOST`, `AUCTION_SERVER_PORT`
-
-**Business Logic Layer**
-- UserService: xác thực, quản lý hồ sơ
-- AuctionService: CRUD phiên, transition trạng thái
-- BidService: xử lý đặt giá, kiểm tra điều kiện
-- WalletService: quản lý số dư, reserve/capture/refund
-- NotificationService: thông báo người dùng
-- SchedulerService: auto transition, trigger auto-bid
-
-**Data Access Layer**
-- DAOs (Data Access Objects) xử lý CRUD
-- Sử dụng PreparedStatement tránh SQL injection
-
-**Database Layer**
-- Cloud DB (Akamai DB hoặc tương tự) lưu trữ dữ liệu
-- Các bảng chính: users, auctions, bids, auto_bids, wallets, transactions, notifications
-- Index trên cột hay query (auction_id, user_id, start_time, end_time)
-
----
-
-## 3. CÁC CHỨC NĂNG ĐẠT ĐƯỢC THEO BAREM ĐIỂM
-
-### 3.1 Chức năng cơ bản (8 điểm)
-
-| # | Chức năng | Hướng giải quyết | Lý do lựa chọn |
-|---|-----------|------------------|-----------------|
-| 1 | Đăng ký, đăng nhập | UserService + token-based session | Bảo mật, hỗ trợ đa client |
-| 2 | Phân quyền (ADMIN, SELLER, BIDDER) | Role-based access control ở server | Kiểm tra quyền trước action nhạy cảm |
-| 3 | CRUD phiên đấu giá | AuctionService + AuctionDAO | Kiểm tra ownership, state transition |
-| 4 | Đặt giá | BidService + validation logic | Kiểm tra giá, thời gian, số dư ví |
-| 5 | Ví điện tử | WalletService + reserve balance | Quản lý số dư, tiền giữ, available |
-| 6 | Danh sách phiên | AuctionDAO + sorting/pagination | Search, filter, sort theo status |
-| 7 | Lịch sử bid | BidDAO + query by auction | Tracking, audit trail |
-| 8 | Thông báo | NotificationService + inbox | Thông báo event quan trọng |
-
-### 3.2 Chức năng nâng cao (2 điểm)
-
-| # | Chức năng | Hướng giải quyết | Lý do lựa chọn |
-|---|-----------|------------------|-----------------|
-| 1 | Tự động đặt giá (Auto-bid) | AutoBidService + trigger logic | Ưu tiên: maxPrice, ngày tạo, ID |
-| 2 | Anti-sniping | Kéo dài endTime khi bid sát hạn chót | Giữ lại tính cạnh tranh của phiên |
-| 3 | Concurrent bidding | Thread-safe + synchronized | Xử lý multiple bid cùng lúc |
-| 4 | Reserved balance reconciliation | Batch job on server startup | Đối soát tiền giữ khi restart |
-| 5 | Real-time update via notification | Broadcast khi bid/status thay đổi | Bidder biết ngay mình bị vượt |
-| 6 | Refund/Settlement logic | Transaction log + status check | Xử lý hoàn tiền đúng trạng thái |
-| 7 | Multi-module Maven | Separation: auction-common, auction-server, auction-client-gui | Reuse code, dễ maintain |
-| 8 | Cloud deployment ready | Config dùng environment variable | Deploy trên cloud không cần sửa code |
-
-### 3.3 Hướng giải quyết chi tiết
-
-**Auto-bid Logic**
-```
-Khi có bid mới:
-  → Lấy danh sách auto-bid rule (auction_id, không phải người đặt giá hiện tại)
-  → Sort theo maxPrice DESC, creation_date ASC, user_id ASC
-  → Duyệt từng rule:
-     - Kiểm tra maxPrice >= currentHighestBid + bidStep
-     - Kiểm tra số dư ví >= bidAmount
-     - Tự động đặt giá
-     - Break nếu thành công
-```
-
-**Anti-sniping**
-```
-Khi có bid trong 60 giây trước endTime:
-  → Kéo dài endTime thêm 60 giây
-  → Tăng counter, tối đa 5 lần
-  → Thông báo bidders về thời gian kết thúc mới
-```
-
-**Reserve Balance**
-```
-Khi bidder dẫn đầu:
-  → Giữ: reserved_balance = currentHighestBid
-  → Khả dụng: available_balance = total - reserved
-
-Khi bidder bị vượt giá:
-  → Release reserved amount
-  
-Khi phiên kết thúc (FINISHED):
-  → Capture reserved (nếu winner tồn tại)
-  → Trừ khỏi available_balance
-```
-
----
-
-## 4. PHÂN CHIA CÔNG VIỆC GIỮA CÁC THÀNH VIÊN
-
-| Thành viên | Phần trăm | Công việc chính |
-|-----------|----------|-----------------|
-| Thành viên 1 | 30% | Backend server: UserService, Authentication, SessionManager, DAO layer |
-| Thành viên 2 | 30% | Backend server: AuctionService, BidService, AutoBid, Scheduler |
-| Thành viên 3 | 25% | Frontend JavaFX: GUI screens (login, auction, bidding, wallet) |
-| Thành viên 4 | 15% | Database design, WalletService, integration test, deployment |
-
-**Công việc chung**
-- Requirements & architecture: Tất cả
-- Testing & bug fix: Tất cả
-- Documentation & demo: Tất cả
-
----
-
-## 5. CÔNG NGHỆ & MÔI TRƯỜNG CHẠY
+### Công Nghệ Sử Dụng
 
 | Thành phần | Công nghệ |
 |-----------|-----------|
 | **Ngôn ngữ** | Java 17+ |
-| **Build Tool** | Maven 3.6.3+ (Multi-module) |
-| **GUI Framework** | JavaFX 21, FXML, CSS |
-| **Communication** | Socket + JSON Protocol |
-| **Database** | MySQL / Cloud DB |
+| **Build Tool** | Maven 3.6.3+ |
+| **GUI Framework** | JavaFX 21 |
+| **Giao tiếp** | Socket + JSON (Gson) |
+| **Database** | MySQL |
 | **Testing** | JUnit 5 |
 
-**Yêu cầu cài đặt**
-- JDK 17+ (khuyến khích JDK 21)
-- Maven 3.6.3+ hoặc Maven Wrapper
-- Internet kết nối cloud server
+### Yêu Cầu Cài Đặt
+
+- **JDK 17 trở lên** (khuyến khích JDK 21)
+- **Maven 3.6.3 trở lên** hoặc sử dụng Maven Wrapper (`.mvn`)
+- **Internet** để kết nối đến cloud server
+
+### Thiết Lập Môi Trường
+
+```bash
+# Kiểm tra JDK
+java -version
+
+# Kiểm tra Maven
+mvn -version
+```
 
 ---
 
-## 6. HƯỚNG DẪN CHẠY HỆ THỐNG
+## 3. Cấu Trúc Module Chính
 
-### 6.1 Chạy Client (Chỉ cần 1 dòng lệnh)
+```
+auction-system/
+├── pom.xml                           # Parent POM (multi-module)
+│
+├── auction-common/                   # Module chia sẻ (DTOs, Protocol)
+│   ├── src/main/java/com/auction/common/
+│   │   ├── network/
+│   │   │   ├── dto/                  # LoginRequest, ProductDTO, BidDTO, etc.
+│   │   │   └── protocol/             # Message, MessageType, Protocol
+│   │   ├── ProductStatus.java
+│   │   ├── UserRole.java
+│   │   └── AuctionTime.java
+│   └── pom.xml
+│
+├── auction-server/                   # Server Socket (chạy trên Cloud)
+│   ├── src/main/java/com/auction/server/
+│   │   ├── network/
+│   │   │   ├── AuctionServer.java    # Main server
+│   │   │   ├── handler/
+│   │   │   │   ├── ClientHandler.java
+│   │   │   │   ├── MessageHandler.java
+│   │   │   │   └── ServerManager.java
+│   │   ├── service/
+│   │   │   ├── BidService.java       # Xử lý đặt giá
+│   │   │   ├── AccountAuthorization.java
+│   │   │   └── BidResult.java
+│   │   ├── dao/
+│   │   │   ├── UserDAO.java
+│   │   │   ├── ProductDAO.java
+│   │   │   ├── BidDAO.java
+│   │   │   └── DatabaseManager.java
+│   │   ├── model/
+│   │   │   └── Product.java
+│   │   └── util/
+│   │       └── Constants.java
+│   └── pom.xml
+│
+├── auction-client-gui/               # Client JavaFX (UI)
+│   ├── src/main/java/com/auction/
+│   │   ├── Main.java                 # Entry point
+│   │   ├── AuctionApplication.java   # JavaFX Application
+│   │   ├── controller/               # FXML Controllers (các màn hình UI)
+│   │   ├── network/
+│   │   │   └── AuctionNetworkClient.java  # Socket client
+│   │   └── util/
+│   │       └── FxmlUtil.java
+│   ├── src/main/resources/
+│   │   ├── config.properties         # Server config (40.83.76.228:9999)
+│   │   └── com/auction/view/         # FXML files
+│   └── pom.xml
+│
+└── .mvn/wrapper/                     # Maven Wrapper
+```
+
+---
+
+## 4. Lệnh Chạy Chương Trình
+
+### Chạy Client (Windows, Linux, macOS)
 
 **Windows PowerShell:**
 ```powershell
@@ -210,44 +117,11 @@ mvnw.cmd -ntp -f auction-client-gui/pom.xml clean javafx:run
 ./mvnw -ntp -f auction-client-gui/pom.xml clean javafx:run
 ```
 
-**Nếu muốn thay đổi server (tuỳ chọn):**
-```powershell
-# Windows
-$env:AUCTION_SERVER_HOST="your-server-ip"
-$env:AUCTION_SERVER_PORT="9999"
-mvnw.cmd -ntp -f auction-client-gui/pom.xml clean javafx:run
-```
+### Chạy Multiple Clients Cùng Lúc
 
-```bash
-# Linux/macOS
-export AUCTION_SERVER_HOST="your-server-ip"
-export AUCTION_SERVER_PORT="9999"
-./mvnw -ntp -f auction-client-gui/pom.xml clean javafx:run
-```
+Mở nhiều terminal/PowerShell và chạy lệnh trên ở mỗi terminal:
 
-### 6.2 Chạy Server (Nếu cần local - optional)
-
-**Build server:**
-```bash
-mvn -ntp -pl auction-server -am package -DskipTests
-```
-
-**Chạy server (Windows PowerShell):**
-```powershell
-$env:DB_PASSWORD="your_db_password"
-java -Dapp.server.port=9999 -jar auction-server/target/auction-server-1.0-SNAPSHOT.jar
-```
-
-**Chạy server (Linux/macOS):**
-```bash
-export DB_PASSWORD="your_db_password"
-java -Dapp.server.port=9999 -jar auction-server/target/auction-server-1.0-SNAPSHOT.jar
-```
-
-### 6.3 Chạy Multiple Clients Cùng Lúc
-
-Mở nhiều terminal/PowerShell rồi chạy lệnh client ở mục 6.1 ở mỗi terminal:
-
+**Windows:**
 ```powershell
 # Terminal 1
 mvnw.cmd -ntp -f auction-client-gui/pom.xml clean javafx:run
@@ -259,100 +133,109 @@ mvnw.cmd -ntp -f auction-client-gui/pom.xml clean javafx:run
 mvnw.cmd -ntp -f auction-client-gui/pom.xml clean javafx:run
 ```
 
----
+**Linux/macOS:**
+```bash
+# Terminal 1
+./mvnw -ntp -f auction-client-gui/pom.xml clean javafx:run
 
-## 7. CẤU TRÚC THƯ MỤC
+# Terminal 2 (mở thêm)
+./mvnw -ntp -f auction-client-gui/pom.xml clean javafx:run
 
-```
-BaiTapLon-auction-system-java-/
-├── pom.xml                          # Maven parent POM
-├── auction-common/                  # Shared code (models, protocol)
-│   ├── src/main/java/com/auction/common
-│   └── pom.xml
-├── auction-server/                  # Server socket application
-│   ├── src/main/java/com/auction/server
-│   │   ├── network/                 # Socket handler
-│   │   ├── service/                 # Business logic
-│   │   └── dao/                     # Database access
-│   ├── pom.xml
-│   └── target/auction-server-1.0-SNAPSHOT.jar
-├── auction-client-gui/              # JavaFX client application
-│   ├── src/main/java/com/auction
-│   │   ├── Main.java                # Entry point
-│   │   ├── AuctionApplication.java  # JavaFX app
-│   │   ├── controller/              # FXML controllers
-│   │   ├── network/                 # Network client
-│   │   └── util/                    # Utilities
-│   ├── src/main/resources/
-│   │   ├── config.properties        # Server config
-│   │   └── com/auction/view/        # FXML files
-│   ├── pom.xml
-│   └── target/
-├── docs/
-│   └── BAO_CAO_LTNC.md              # Detailed report
-├── README.md                        # This file
-└── .mvn/wrapper/                    # Maven Wrapper
+# Terminal 3 (mở thêm)
+./mvnw -ntp -f auction-client-gui/pom.xml clean javafx:run
 ```
 
----
-
-## 8. CHỨC NĂNG HỖ TRỢ TRỊ CHỨNG
-
-### Tài khoản & Xác thực
-- ✅ Đăng ký với role SELLER/BIDDER
-- ✅ Đăng nhập, đăng xuất
-- ✅ Token-based session management
-- ✅ Mật khẩu hash (PasswordUtil)
-
-### Quản lý Phiên Đấu Giá
-- ✅ CRUD auction (create, read, update, delete)
-- ✅ State transition: OPEN → RUNNING → FINISHED → PAID/CANCELED
-- ✅ Scheduled state transition
-- ✅ Anti-sniping (extend endTime)
-- ✅ Early-close countdown
-
-### Đấu Giá (Bidding)
-- ✅ Đặt giá real-time
-- ✅ Kiểm tra điều kiện: giá, thời gian, số dư
-- ✅ Lịch sử bid tracking
-- ✅ Tự động đặt giá (Auto-bid) với logic ưu tiên
-- ✅ Concurrent bidding (thread-safe)
-
-### Ví Điện Tử
-- ✅ Quản lý số dư: total, reserved, available
-- ✅ Nạp tiền (top-up)
-- ✅ Reserve tiền khi dẫn đầu
-- ✅ Capture khi thắng
-- ✅ Refund khi hủy phiên
-- ✅ Transaction log
-
-### Thông Báo & Admin
-- ✅ Notification system
-- ✅ Admin quản lý tài khoản (lock/unlock)
-- ✅ Admin quản lý phiên
-- ✅ Tạo announcement
-
-### Kiểm Thử
-- ✅ Unit tests (validation, password, network)
-- ✅ Integration tests (bidding, auto-bid, settlement)
-- ✅ Concurrent test scenarios
+> **Lưu ý:** Client sẽ tự động kết nối đến cloud server `40.83.76.228:9999` (cấu hình trong `config.properties`)
 
 ---
 
-## 9. KẾT LUẬN
+## 5. Hướng Dẫn Chạy Server/Client
 
-Hệ thống đấu giá trực tuyến hoàn thiện với:
-- ✅ Kiến trúc client-server, cloud-ready
-- ✅ Đủ chức năng cơ bản + nâng cao
-- ✅ Chỉ cần 1 dòng lệnh để chạy client
-- ✅ Tự động kết nối cloud server `40.83.76.228:9999`
-- ✅ Hỗ trợ đa client concurrent
-- ✅ Xử lý auto-bid, anti-sniping, ví điện tử
+### Quy Trình Chạy
+
+1. **Server đã chạy sẵn trên cloud** (`40.83.76.228:9999`) - không cần chạy local
+2. **Chạy Client** - Mở terminal và chạy lệnh ở mục 4
+3. **Ứng dụng JavaFX sẽ mở** - Đăng nhập với tài khoản hoặc đăng ký
+4. **Client tự động kết nối** đến cloud server
+
+### Các Vai Trò Người Dùng
+
+- **BIDDER:** Xem sản phẩm, đặt giá, nạp tiền ví
+- **SELLER:** Tạo/chỉnh sửa/xoá sản phẩm, xem phiên của mình
+- **ADMIN:** Quản lý tài khoản, xoá sản phẩm, đóng phiên
 
 ---
 
-**Link Github:** https://github.com/nguyenthehieu4869-alt/BaiTapLon-auction-system-java-
+## 6. Danh Sách Chức Năng Đã Hoàn Thành
 
-**Link Báo cáo PDF:** [Cập nhật link]
+### Chức Năng Cơ Bản
 
-**Link Video Demo:** [Cập nhật link]
+- ✅ **Đăng Ký / Đăng Nhập**
+  - Đăng ký tài khoản với vai trò SELLER hoặc BIDDER
+  - Đăng nhập, kiểm tra mật khẩu
+  - Validation username, email, mật khẩu
+
+- ✅ **Quản Lý Tài Khoản**
+  - Xem hồ sơ (username, email, số phiên thắng, số sản phẩm bán)
+  - Quản lý ví điện tử
+
+- ✅ **Quản Lý Sản Phẩm (Phiên Đấu Giá)**
+  - Tạo sản phẩm (SELLER): tên, mô tả, giá khởi điểm, thời gian bắt đầu/kết thúc, ảnh
+  - Chỉnh sửa sản phẩm (SELLER): cập nhật thông tin khi chưa có bid
+  - Xoá sản phẩm (ADMIN): xoá phiên đấu giá
+  - Đóng phiên (ADMIN): kết thúc phiên sớm
+  - Danh sách sản phẩm (BIDDER): xem toàn bộ phiên đấu giá
+  - Danh sách sản phẩm của seller (SELLER): xem phiên của chính mình
+
+- ✅ **Đặt Giá (Bidding)**
+  - Đặt giá: kiểm tra giá cao hơn giá hiện tại, số dư ví đủ
+  - Real-time cập nhật: khi có bid mới, tất cả client nhận update
+  - Kiểm tra anti-sniping: nếu bid trong 15 giây trước hết giờ, kéo dài thời gian
+  - Lịch sử bid: xem toàn bộ bid của một phiên
+
+- ✅ **Ví Điện Tử**
+  - Nạp tiền vào ví
+  - Trừ tiền khi đặt giá
+  - Xem số dư ví
+
+- ✅ **Xác Định Người Thắng**
+  - Lấy người thắng (highest bidder) của phiên
+
+### Chức Năng Nâng Cao
+
+- ✅ **Concurrent Bidding**
+  - Xử lý nhiều bid từ nhiều client cùng lúc
+  - Sử dụng database lock (SELECT FOR UPDATE) để tránh race condition
+  - Transaction rollback nếu lỗi
+
+- ✅ **Anti-Sniping**
+  - Khi có bid trong 15 giây trước hết giờ, kéo dài endTime thêm 15 giây
+  - Cập nhật realtime thời gian mới cho tất cả bidders
+
+- ✅ **Real-time Update**
+  - ServerManager broadcast MESSAGE khi có bid/sản phẩm thay đổi
+  - Client nhận update qua listener thread
+
+- ✅ **Socket Communication**
+  - Client-Server giao tiếp qua socket + JSON
+  - Request/Response với requestId tracking
+  - Handle disconnect gracefully
+
+- ✅ **Database Transaction**
+  - Rollback tự động khi lỗi
+  - Đảm bảo consistency khi đặt giá
+
+---
+
+## 7. Link Báo Cáo PDF Và Video Demo
+
+- **Báo Cáo PDF:** [Cập nhật link]
+- **Video Demo:** [Cập nhật link]
+
+---
+
+## Ghi Chú
+
+- Server chạy sẵn trên cloud, client chỉ cần chạy lệnh Maven
+- Mỗi client là một process riêng, có thể mở nhiều client để test concurrent bidding
+- Database được quản lý bởi cloud server, client không truy cập trực tiếp
