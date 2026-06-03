@@ -24,7 +24,7 @@ Hệ thống đấu giá trực tuyến là một ứng dụng client-server cho
 | **Build Tool** | Maven 3.6.3+ |
 | **GUI Framework** | JavaFX 21 |
 | **Giao tiếp** | Socket + JSON (Gson) |
-| **Database** | MySQL |
+| **Database** | MySQL,Azure |
 | **Testing** | JUnit 5 |
 
 ### Yêu Cầu Cài Đặt
